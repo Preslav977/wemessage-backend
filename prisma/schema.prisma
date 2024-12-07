@@ -14,21 +14,33 @@ datasource db {
 }
 
 model User {
-  id Int @default(autoincrement())
-  first_name String
-  last_name String
-  username String @unique
-  password String
-  confirm_password String
-  bio String?
-  profile_picture String
+  id                 Int     @id @default(autoincrement())
+  first_name         String
+  last_name          String
+  username           String  @unique
+  password           String
+  confirm_password   String
+  bio                String?
+  profile_picture    String
   background_picture String
-  status Boolean
-  role Role @default(USER)
+  status             Boolean
+  role               Role    @default(USER)
+  chats Chat[]
+
   @@map("user")
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+model Chat {
+  id           String   @id @default(uuid()) 
+  chat_message String
+  chat_image   String?
+  createdAt    DateTime @default(now())
+  users User[]
+
+  @@map("chat")
 }

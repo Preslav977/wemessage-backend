@@ -6,7 +6,9 @@ const path = require("node:path");
 
 const session = require("express-session");
 
-const pgSession = require("connect-pg-simple")(session);
+const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
+
+const { PrismaClient } = require("@prisma/client");
 
 const passport = require("passport");
 
@@ -31,10 +33,17 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   session({
+    cookie: {
+      maxAge: "24 * 60* 60* 1000",
+    },
     secret: process.env.sessionSecret,
     resave: false,
     saveUninitialized: false,
-    //session options
+    store: new PrismaSessionStore(new PrismaClient(), {
+      checkPeriod: "2 * 60 * 1000",
+      dbRecordIdIsSessionId: true,
+      dbRecordIdFunction: undefined,
+    }),
   })
 );
 

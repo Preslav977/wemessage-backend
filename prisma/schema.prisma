@@ -27,6 +27,7 @@ model User {
   user_role          Role      @default(USER)
   user_chats         Chat[]
   user_messages      Message[]
+  user_groups        Group[]
 
   @@map("user")
 }
@@ -40,18 +41,30 @@ model Chat {
   id            String    @id @default(uuid())
   chat_users    User[]
   chat_messages Message[]
+  chat_groups   Group[]
 
   @@map("chat")
 }
 
 model Message {
-  id            Int      @id @default(autoincrement())
-  message_text  String
-  message_image String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  message_users User[]
-  message_chats Chat[]
+  id             Int      @id @default(autoincrement())
+  message_text   String
+  message_image  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  message_users  User[]
+  message_chats  Chat[]
+  message_groups Group[]
 
   @@map("message")
+}
+
+model Group {
+  id             String    @id @default(uuid())
+  group_name     String    @unique
+  group_users    User[]
+  group_chats    Chat[]
+  group_messages Message[]
+
+  @@map("group")
 }

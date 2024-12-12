@@ -16,4 +16,9 @@ usersRouter.post("/signup", usersController.users_sign_up);
 
 usersRouter.put("/:id", usersController.users_update_profile);
 
+usersRouter.put(
+  "/:id/passwords",
+  usersController.users_update_profile_passwords
+);
+
 module.exports = usersRouter;

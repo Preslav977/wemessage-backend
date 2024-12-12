@@ -9,28 +9,13 @@ const passwordContainErr =
 
 const passwordMatchErr = "must match";
 
+const bioLengthErr = "must not be more than 150 characters";
+
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
 const validateUsers = [
-  body("username")
-    .custom(async (value) => {
-      const findIfUsernameIsTaken = await prisma.user.findUnique({
-        where: {
-          username: value,
-        },
-      });
-
-      if (findIfUsernameIsTaken) {
-        throw new Error(`Username ${usernameTakenError} `);
-      }
-    })
-    .trim()
-    .isLength({ min: 1, max: 30 })
-    .escape()
-    .withMessage(`Username ${lengthErr}`),
-
   body("first_name")
     .trim()
     .isLength({ min: 1, max: 30 })
@@ -43,12 +28,29 @@ const validateUsers = [
     .escape()
     .withMessage(`Last name ${lengthErr}`),
 
+  body("username")
+    .custom(async (value) => {
+      const findIfUsernameIsTaken = await prisma.user.findUnique({
+        where: {
+          username: value,
+        },
+      });
+
+      if (findIfUsernameIsTaken) {
+        throw new Error(`Username ${usernameTakenError}`);
+      }
+    })
+    .trim()
+    .isLength({ min: 1, max: 30 })
+    .escape()
+    .withMessage(`Username ${lengthErr}`),
+
   body("password")
     .trim()
     .isLength({ min: 8 })
     .escape()
     .matches(
-      "^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{8,}$"
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     )
     .withMessage(`Password ${passwordContainErr}`),
 
@@ -57,6 +59,12 @@ const validateUsers = [
       return value === req.body.password;
     })
     .withMessage(`Passwords ${passwordMatchErr}`),
+
+  body("bio")
+    .trim()
+    .isLength({ max: 150 })
+    .escape()
+    .withMessage(`Bio ${bioLengthErr}`),
 ];
 
 module.exports = validateUsers;

@@ -38,13 +38,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
     cookie: {
-      maxAge: "24 * 60* 60* 1000",
+      maxAge: 24 * 60 * 60 * 1000,
     },
     secret: process.env.sessionSecret,
     resave: false,
     saveUninitialized: false,
     store: new PrismaSessionStore(new PrismaClient(), {
-      checkPeriod: "2 * 60 * 1000",
+      checkPeriod: 2 * 60 * 1000,
       dbRecordIdIsSessionId: true,
       dbRecordIdFunction: undefined,
     }),
@@ -131,7 +131,7 @@ app.get("/logout", (req, res, next) => {
   });
 });
 
-app.use("/", indexRouter);
+// app.use("/", indexRouter);
 
 app.use("/users", usersRouter);
 

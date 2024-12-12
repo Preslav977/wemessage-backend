@@ -10,6 +10,8 @@ const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
 
 const { PrismaClient } = require("@prisma/client");
 
+const prisma = new PrismaClient();
+
 const passport = require("passport");
 
 const LocalStrategy = require("passport-local").Strategy;
@@ -17,6 +19,8 @@ const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcryptjs");
 
 const indexRouter = require("./routes/indexRouter");
+
+const usersRouter = require("./routes/usersRouter");
 
 const app = express();
 
@@ -57,11 +61,19 @@ app.use((req, res, next) => {
 passport.use(
   new LocalStrategy(async (username, password, done) => {
     try {
-      const { rows } = await pool.query(
-        "SELECT * FROM users WHERE username = $1",
-        [username]
-      );
-      const user = rows[0];
+      // const { rows } = await pool.query(
+      //   "SELECT * FROM users WHERE username = $1",
+      //   [username]
+      // );
+      // const user = rows[0];
+
+      const user = await prisma.user.findFirst({
+        where: {
+          username: username,
+        },
+      });
+
+      console.log(user);
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
@@ -83,10 +95,18 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [
-      id,
-    ]);
-    const user = rows[0];
+    // const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [
+    //   id,
+    // ]);
+    // const user = rows[0];
+
+    const user = await prisma.user.findFirst({
+      where: {
+        id: id,
+      },
+    });
+
+    console.log(user);
 
     done(null, user);
   } catch (err) {
@@ -95,14 +115,14 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  "/log-in",
+  "/login",
   passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/",
   })
 );
 
-app.get("/log-out", (req, res, next) => {
+app.get("/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) {
       return next(err);
@@ -112,6 +132,8 @@ app.get("/log-out", (req, res, next) => {
 });
 
 app.use("/", indexRouter);
+
+app.use("/users", usersRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

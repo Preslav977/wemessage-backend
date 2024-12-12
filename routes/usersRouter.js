@@ -10,4 +10,6 @@ usersRouter.post("/login", usersController.users_log_in);
 
 usersRouter.post("/login_admin", usersController.users_log_in_admin);
 
+usersRouter.post("/login_guest", usersController.users_log_in_guest);
+
 module.exports = usersRouter;

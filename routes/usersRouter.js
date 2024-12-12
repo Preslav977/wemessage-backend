@@ -14,4 +14,6 @@ usersRouter.post("/login_guest", usersController.users_log_in_guest);
 
 usersRouter.post("/signup", usersController.users_sign_up);
 
+usersRouter.put("/:id", usersController.users_update_profile);
+
 module.exports = usersRouter;

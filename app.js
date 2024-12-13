@@ -67,7 +67,7 @@ passport.use(
         },
       });
 
-      console.log(user);
+      // console.log(user);
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
@@ -95,7 +95,7 @@ passport.deserializeUser(async (id, done) => {
       },
     });
 
-    console.log(user);
+    // console.log(user);
 
     done(null, user);
   } catch (err) {
@@ -125,8 +125,8 @@ app.get("users/logout", (req, res, next) => {
 app.use("/users", usersRouter);
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("Something broke");
+  res.status(err.status || 500);
+  console.error(err);
 });
 
 const PORT = process.env.PORT || 3000;

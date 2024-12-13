@@ -4,7 +4,7 @@ const usersRouter = Router();
 
 const usersController = require("../controllers/usersController");
 
-// usersRouter.get("/:id", usersController.users_get);
+usersRouter.get("/", usersController.users_get_detail);
 
 usersRouter.post("/login", usersController.users_log_in);
 

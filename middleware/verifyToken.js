@@ -6,21 +6,26 @@ function verifyToken(req, res, next) {
   console.log(bearerHeader);
 
   if (typeof bearerHeader !== "undefined") {
-    const bearer = bearerToken.split(" ");
+    const bearer = bearerHeader.split(" ");
+
+    console.log(bearer);
 
     const bearerToken = bearer[1];
 
-    console.log(bearerHeader);
+    console.log(bearerToken);
+
+    req.token = bearerToken;
 
     jwt.verify(req.token, process.env.SECRET, (err, authData) => {
       if (err) {
-        res.status(403);
+        res.sendStatus(403);
       } else {
-        (req.authData = authData), next();
+        req.authData = authData;
+        next();
       }
     });
   } else {
-    res.status(403);
+    res.sendStatus(403);
   }
 }
 

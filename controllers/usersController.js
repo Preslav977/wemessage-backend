@@ -14,6 +14,8 @@ const passport = require("passport");
 
 const jwt = require("jsonwebtoken");
 
+const verifyToken = require("../middleware/verifyToken");
+
 exports.users_sign_up = [
   validateUsers,
   asyncHandler(async (req, res, next) => {
@@ -55,12 +57,24 @@ exports.users_log_in = [
   (req, res) => {
     const { id } = req.user;
 
-    console.log(id);
+    // console.log(id);
 
-    console.log(req.user);
+    // console.log(req.user);
 
-    jwt.sign({ id }, process.env.SECRET, { expiresIn: "30s" }, (err, token) => {
+    jwt.sign({ id }, process.env.SECRET, { expiresIn: "5m" }, (err, token) => {
       res.json({ token });
     });
   },
+];
+
+exports.users_get_detail = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const getUserById = await prisma.user.findFirst({
+      where: {
+        id: req.authData.id,
+      },
+    });
+    res.json(getUserById);
+  }),
 ];

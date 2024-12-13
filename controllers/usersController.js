@@ -10,6 +10,8 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+const passport = require("passport");
+
 const jwt = require("jsonwebtoken");
 
 exports.users_sign_up = [
@@ -49,6 +51,7 @@ exports.users_sign_up = [
 ];
 
 exports.users_log_in = [
+  passport.authenticate("local", { session: false }),
   (req, res) => {
     const { id } = req.user;
 

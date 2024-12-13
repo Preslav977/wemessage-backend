@@ -10,7 +10,7 @@ usersRouter.post("/login", usersController.users_log_in);
 
 usersRouter.post("/login_admin", usersController.users_log_in_admin);
 
-// usersRouter.post("/login_guest", usersController.users_log_in_guest);
+usersRouter.post("/login_guest", usersController.users_log_in_guest);
 
 usersRouter.post("/signup", usersController.users_sign_up);
 

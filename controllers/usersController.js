@@ -85,6 +85,22 @@ exports.users_log_in_admin = [
   },
 ];
 
+exports.users_log_in_guest = [
+  passport.authenticate("local", { session: false }),
+  (req, res) => {
+    const { id, user_role } = req.user;
+
+    jwt.sign(
+      { id, user_role },
+      process.env.SECRET,
+      { expiresIn: "25m" },
+      (err, token) => {
+        res.json({ token });
+      }
+    );
+  },
+];
+
 exports.users_get_detail = [
   verifyToken,
   asyncHandler(async (req, res, next) => {

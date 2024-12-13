@@ -10,6 +10,8 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+const jwt = require("jsonwebtoken");
+
 exports.users_sign_up = [
   validateUsers,
   asyncHandler(async (req, res, next) => {
@@ -44,4 +46,18 @@ exports.users_sign_up = [
       }
     });
   }),
+];
+
+exports.users_log_in = [
+  (req, res) => {
+    const { id } = req.user;
+
+    console.log(id);
+
+    console.log(req.user);
+
+    jwt.sign({ id }, process.env.SECRET, { expiresIn: "30s" }, (err, token) => {
+      res.json({ token });
+    });
+  },
 ];

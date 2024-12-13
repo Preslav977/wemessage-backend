@@ -6,7 +6,7 @@ const usersController = require("../controllers/usersController");
 
 // usersRouter.get("/:id", usersController.users_get);
 
-// usersRouter.post("/login", usersController.users_log_in);
+usersRouter.post("/login", usersController.users_log_in);
 
 // usersRouter.post("/login_admin", usersController.users_log_in_admin);
 

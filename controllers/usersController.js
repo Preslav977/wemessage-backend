@@ -57,13 +57,31 @@ exports.users_log_in = [
   (req, res) => {
     const { id } = req.user;
 
-    // console.log(id);
-
-    // console.log(req.user);
-
-    jwt.sign({ id }, process.env.SECRET, { expiresIn: "5m" }, (err, token) => {
+    jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
       res.json({ token });
     });
+  },
+];
+
+exports.users_log_in_admin = [
+  passport.authenticate("local", { session: false }),
+  (req, res) => {
+    const { id, user_role } = req.user;
+
+    jwt.sign(
+      {
+        id,
+        user_role,
+      },
+      process.env.SECRET,
+      { expiresIn: "25m" },
+      (err, token) => {
+        if (user_role !== "ADMIN") {
+          res.json({ message: "Unauthorized" });
+        }
+        res.json({ token });
+      }
+    );
   },
 ];
 

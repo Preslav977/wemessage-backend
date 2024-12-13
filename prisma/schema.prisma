@@ -15,15 +15,15 @@ datasource db {
 
 model User {
   id                 Int       @id @default(autoincrement())
-  first_name         String
-  last_name          String
+  first_name         String    @unique
+  last_name          String    @unique
   username           String    @unique
   password           String
   confirm_password   String
   bio                String?
   profile_picture    String
   background_picture String
-  status             Boolean   @default(false)
+  online_presence    Boolean   @default(false)
   user_role          Role      @default(USER)
   user_chats         Chat[]
   user_messages      Message[]

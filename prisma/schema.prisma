@@ -46,9 +46,10 @@ model User {
 
 model Conversation {
   id            String    @id @default(uuid())
-  chat_users    User[]
-  chat_messages Message[]
-  chat_groups   Group[]
+  users    User[]
+  messages Message[]
+  group        Group? @relation(fields: [groupId], references: [id])
+  groupId String
 
   @@map("chat")
 }

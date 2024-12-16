@@ -13,6 +13,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+  GUEST
+}
+
+enum Presence {
+  ONLINE
+  OFFLINE
+}
+
 model User {
   id                 Int       @id @default(autoincrement())
   first_name         String    @unique
@@ -23,22 +34,17 @@ model User {
   bio                String?
   profile_picture    String
   background_picture String
-  online_presence    Boolean   @default(false)
-  user_role          Role      @default(USER)
-  user_chats         Chat[]
-  user_messages      Message[]
-  user_groups        Group[]
+  online_presence    Presence   @default(OFFLINE)
+  role          Role      @default(USER)
+  conversations         Conversation[]
+  messages      Message[]
+  group        Group? @relation(fields: [groupId], references: [id])
+  groupId String
 
   @@map("user")
 }
 
-enum Role {
-  USER
-  ADMIN
-  GUEST
-}
-
-model Chat {
+model Conversation {
   id            String    @id @default(uuid())
   chat_users    User[]
   chat_messages Message[]

@@ -39,7 +39,7 @@ model User {
   conversations      Conversation[]
   messages           Message[]
   group              Group?         @relation(fields: [groupId], references: [id])
-  groupId            String
+  groupId            String?
 
   @@map("user")
 }

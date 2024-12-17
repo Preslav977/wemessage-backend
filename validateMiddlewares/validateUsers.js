@@ -5,7 +5,7 @@ const lengthErr = "must be between 1 and 30 characters";
 takenError = "is already taken";
 
 const passwordContainErr =
-  "must be minimum 8 characters, one upper letter, one special character";
+  "must be minimum 8 characters, must have one upper and lower letter, and one special character";
 
 const passwordMatchErr = "must match";
 

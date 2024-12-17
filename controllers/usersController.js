@@ -26,7 +26,7 @@ exports.users_sign_up = [
 
     bcrypt.hash(password, 10, async (err, hashedPassword) => {
       if (err) {
-        console.error("Failed to ash the passwords", err);
+        console.error("Failed to hash the passwords", err);
         throw err;
       }
 
@@ -110,5 +110,31 @@ exports.users_get_detail = [
       },
     });
     res.json(getUserById);
+  }),
+];
+
+exports.users_update_background_image = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const { background_picture } = req.body;
+
+    const getUserById = await prisma.user.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    const updateUserBackgroundPicture = await prisma.user.update({
+      where: {
+        id: Number(getUserById.id),
+      },
+      data: {
+        background_picture: background_picture,
+      },
+    });
+
+    res.json({ updateUserBackgroundPicture });
   }),
 ];

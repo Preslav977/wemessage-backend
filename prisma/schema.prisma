@@ -49,7 +49,7 @@ model Conversation {
   users    User[]
   messages Message[]
   group    Group?    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId  String
+  groupId  String?
 
   @@map("chat")
 }

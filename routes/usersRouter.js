@@ -1,26 +1,26 @@
 const { Router } = require("express");
 
-const usersRouter = Router();
+const userRouter = Router();
 
-const usersController = require("../controllers/usersController");
+const userController = require("../controllers/userController");
 
-usersRouter.get("/", usersController.user_get_detail);
+userRouter.get("/", userController.user_get_detail);
 
-usersRouter.post("/login", usersController.user_log_in);
+userRouter.post("/login", userController.user_log_in);
 
-usersRouter.post("/login_admin", usersController.user_log_in_admin);
+userRouter.post("/login_admin", userController.user_log_in_admin);
 
-usersRouter.post("/login_guest", usersController.user_log_in_guest);
+userRouter.post("/login_guest", userController.user_log_in_guest);
 
-usersRouter.post("/signup", usersController.user_sign_up);
+userRouter.post("/signup", userController.user_sign_up);
 
-usersRouter.put("/profile/:id", usersController.user_update_background_image);
+userRouter.put("/profile/:id", userController.user_update_background_image);
 
-usersRouter.put("/profile/edit/:id", usersController.user_update_profile);
+userRouter.put("/profile/edit/:id", userController.user_update_profile);
 
-usersRouter.put(
+userRouter.put(
   "/profile/change-passwords/:id",
-  usersController.user_update_passwords
+  userController.user_update_passwords
 );
 
-module.exports = usersRouter;
+module.exports = userRouter;

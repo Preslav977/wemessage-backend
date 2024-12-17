@@ -22,6 +22,8 @@ const indexRouter = require("./routes/indexRouter");
 
 const usersRouter = require("./routes/usersRouter");
 
+const conversationRouter = require("./routes/conversationRouter");
+
 const app = express();
 
 app.set("views", path.join(__dirname, "views"));
@@ -124,6 +126,8 @@ app.get("user/logout", (req, res, next) => {
 // app.use("/", indexRouter);
 
 app.use("/user", usersRouter);
+
+app.use("/conversation", conversationRouter);
 
 app.use((err, req, res, next) => {
   res.status(err.status || 500);

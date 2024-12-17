@@ -63,3 +63,25 @@ exports.conversation_details = [
     res.json({ findConversationById });
   }),
 ];
+
+exports.conversation_edit_message = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id, messageId } = req.params;
+
+    const { message_text, message_image } = req.body;
+
+    const editMessageInConversation = await prisma.message.update({
+      where: {
+        id: Number(messageId),
+        conversationId: id,
+      },
+      data: {
+        message_text: message_text,
+        message_image: message_image,
+      },
+    });
+
+    res.json({ editMessageInConversation });
+  }),
+];

@@ -2,7 +2,7 @@ const { body } = require("express-validator");
 
 const lengthErr = "must be between 1 and 30 characters";
 
-takenError = "is already taken";
+const takenError = "is already taken";
 
 const passwordContainErr =
   "must be minimum 8 characters, must have one upper and lower letter, and one special character";
@@ -15,7 +15,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-const validateUsers = [
+const validateUserRegistration = [
   body("first_name")
     .trim()
     .isLength({ min: 1, max: 30 })
@@ -91,4 +91,4 @@ const validateUsers = [
     .withMessage(`Bio ${bioLengthErr}`),
 ];
 
-module.exports = validateUsers;
+module.exports = validateUserRegistration;

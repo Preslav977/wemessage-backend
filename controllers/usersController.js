@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const asyncHandler = require("express-async-handler");
 
-const validateUsers = require("../validateMiddlewares/validateUsers");
+const validateUserRegistration = require("../validateMiddlewares/validateUserRegistration");
 
 const { PrismaClient } = require("@prisma/client");
 
@@ -16,8 +16,10 @@ const jwt = require("jsonwebtoken");
 
 const verifyToken = require("../middleware/verifyToken");
 
+const validateUserProfile = require("../validateMiddlewares/validateUserProfile");
+
 exports.users_sign_up = [
-  validateUsers,
+  validateUserRegistration,
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -135,7 +137,7 @@ exports.users_update_background_image = [
 
 exports.users_update_profile = [
   verifyToken,
-  validateUsers,
+  validateUserProfile,
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 

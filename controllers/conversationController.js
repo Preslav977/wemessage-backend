@@ -102,3 +102,16 @@ exports.conversation_delete_message = [
     res.json({ message: "Message has been deleted." });
   }),
 ];
+
+exports.conversations_get = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const getConversations = await prisma.conversation.findMany({
+      include: {
+        users: true,
+      },
+    });
+
+    res.json({ getConversations });
+  }),
+];

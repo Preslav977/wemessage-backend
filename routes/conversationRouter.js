@@ -23,4 +23,6 @@ conversationRouter.delete(
   conversationController.conversation_delete_message
 );
 
+conversationRouter.get("/", conversationController.conversations_get);
+
 module.exports = conversationRouter;

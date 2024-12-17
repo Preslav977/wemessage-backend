@@ -85,3 +85,20 @@ exports.conversation_edit_message = [
     res.json({ editMessageInConversation });
   }),
 ];
+
+exports.conversation_delete_message = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id, messageId } = req.params;
+
+    const deleteMessageInConversation = await prisma.message.delete({
+      where: {
+        id: Number(messageId),
+        conversationId: id,
+        userId: req.authData.id,
+      },
+    });
+
+    res.json({ message: "Message has been deleted." });
+  }),
+];

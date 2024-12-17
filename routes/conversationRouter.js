@@ -18,4 +18,9 @@ conversationRouter.put(
   conversationController.conversation_edit_message
 );
 
+conversationRouter.delete(
+  "/:id/message/:messageId",
+  conversationController.conversation_delete_message
+);
+
 module.exports = conversationRouter;

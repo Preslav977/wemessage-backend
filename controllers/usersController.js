@@ -18,7 +18,9 @@ const verifyToken = require("../middleware/verifyToken");
 
 const validateUserProfile = require("../validateMiddlewares/validateUserProfile");
 
-exports.users_sign_up = [
+const validateUserProfilePasswords = require("../validateMiddlewares/validateUserProfilePasswords");
+
+exports.user_sign_up = [
   validateUserRegistration,
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
@@ -54,7 +56,7 @@ exports.users_sign_up = [
   }),
 ];
 
-exports.users_log_in = [
+exports.user_log_in = [
   passport.authenticate("local", { session: false }),
   (req, res) => {
     const { id } = req.user;
@@ -65,7 +67,7 @@ exports.users_log_in = [
   },
 ];
 
-exports.users_log_in_admin = [
+exports.user_log_in_admin = [
   passport.authenticate("local", { session: false }),
   (req, res) => {
     const { id, user_role } = req.user;
@@ -87,7 +89,7 @@ exports.users_log_in_admin = [
   },
 ];
 
-exports.users_log_in_guest = [
+exports.user_log_in_guest = [
   passport.authenticate("local", { session: false }),
   (req, res) => {
     const { id, user_role } = req.user;
@@ -103,7 +105,7 @@ exports.users_log_in_guest = [
   },
 ];
 
-exports.users_get_detail = [
+exports.user_get_detail = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
     const getUserById = await prisma.user.findFirst({
@@ -115,7 +117,7 @@ exports.users_get_detail = [
   }),
 ];
 
-exports.users_update_background_image = [
+exports.user_update_background_image = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
@@ -135,7 +137,7 @@ exports.users_update_background_image = [
   }),
 ];
 
-exports.users_update_profile = [
+exports.user_update_profile = [
   verifyToken,
   validateUserProfile,
   asyncHandler(async (req, res, next) => {
@@ -163,5 +165,55 @@ exports.users_update_profile = [
 
       res.json({ updateUserProfile });
     }
+  }),
+];
+
+exports.user_update_passwords = [
+  verifyToken,
+  validateUserProfilePasswords,
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id } = req.params;
+
+    const { old_password, password, confirm_password } = req.body;
+
+    const user = await prisma.user.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    const checkIfOldPasswordMatches = await bcrypt.compare(
+      old_password,
+      user.password
+    );
+
+    bcrypt.hash(password, 10, async (err, hashedPassword) => {
+      if (err) {
+        console.error("Failed to hash the passwords", err);
+        throw err;
+      }
+
+      if (checkIfOldPasswordMatches) {
+        if (!errors.isEmpty()) {
+          res.status(400).send(errors.array());
+        } else {
+          const updateUserPasswords = await prisma.user.update({
+            where: {
+              id: Number(id),
+            },
+            data: {
+              password: hashedPassword,
+              confirm_password: hashedPassword,
+            },
+          });
+
+          res.json({ updateUserPasswords });
+        }
+      } else {
+        res.json({ message: "Old password doesn't match." });
+      }
+    });
   }),
 ];

@@ -4,23 +4,23 @@ const usersRouter = Router();
 
 const usersController = require("../controllers/usersController");
 
-usersRouter.get("/", usersController.users_get_detail);
+usersRouter.get("/", usersController.user_get_detail);
 
-usersRouter.post("/login", usersController.users_log_in);
+usersRouter.post("/login", usersController.user_log_in);
 
-usersRouter.post("/login_admin", usersController.users_log_in_admin);
+usersRouter.post("/login_admin", usersController.user_log_in_admin);
 
-usersRouter.post("/login_guest", usersController.users_log_in_guest);
+usersRouter.post("/login_guest", usersController.user_log_in_guest);
 
-usersRouter.post("/signup", usersController.users_sign_up);
+usersRouter.post("/signup", usersController.user_sign_up);
 
-usersRouter.put("/profile/:id", usersController.users_update_background_image);
+usersRouter.put("/profile/:id", usersController.user_update_background_image);
 
-usersRouter.put("/profile/edit/:id", usersController.users_update_profile);
+usersRouter.put("/profile/edit/:id", usersController.user_update_profile);
 
-// usersRouter.put(
-//   "/:id/passwords",
-//   usersController.users_update_profile_passwords
-// );
+usersRouter.put(
+  "/profile/change-passwords/:id",
+  usersController.user_update_passwords
+);
 
 module.exports = usersRouter;

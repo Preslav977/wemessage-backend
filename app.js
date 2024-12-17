@@ -67,12 +67,13 @@ passport.use(
         },
       });
 
-      // console.log(user);
+      console.log(user);
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
       }
       const match = await bcrypt.compare(password, user.password);
+      console.log(match, password, user.password);
       if (!match) {
         return done(null, false, { message: "Incorrect password" });
       }
@@ -91,7 +92,7 @@ passport.deserializeUser(async (id, done) => {
   try {
     const user = await prisma.user.findFirst({
       where: {
-        id: id,
+        id: Number(id),
       },
     });
 
@@ -104,14 +105,14 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  "users/login",
+  "user/login",
   passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/",
   })
 );
 
-app.get("users/logout", (req, res, next) => {
+app.get("user/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) {
       return next(err);
@@ -122,7 +123,7 @@ app.get("users/logout", (req, res, next) => {
 
 // app.use("/", indexRouter);
 
-app.use("/users", usersRouter);
+app.use("/user", usersRouter);
 
 app.use((err, req, res, next) => {
   res.status(err.status || 500);

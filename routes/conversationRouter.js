@@ -11,4 +11,6 @@ conversationRouter.post(
   conversationController.conversation_send_message
 );
 
+conversationRouter.get("/:id", conversationController.conversation_details);
+
 module.exports = conversationRouter;

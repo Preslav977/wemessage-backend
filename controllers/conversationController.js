@@ -44,3 +44,22 @@ exports.conversation_send_message = [
     res.json({ sendMessageInConversation });
   }),
 ];
+
+exports.conversation_details = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const findConversationById = await prisma.conversation.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        users: true,
+        messages: true,
+      },
+    });
+
+    res.json({ findConversationById });
+  }),
+];

@@ -3,16 +3,16 @@ const jwt = require("jsonwebtoken");
 function verifyToken(req, res, next) {
   const bearerHeader = req.headers.authorization;
 
-  console.log(bearerHeader);
+  // console.log(bearerHeader);
 
   if (typeof bearerHeader !== "undefined") {
     const bearer = bearerHeader.split(" ");
 
-    console.log(bearer);
+    // console.log(bearer);
 
     const bearerToken = bearer[1];
 
-    console.log(bearerToken);
+    // console.log(bearerToken);
 
     req.token = bearerToken;
 

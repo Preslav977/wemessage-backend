@@ -16,6 +16,8 @@ usersRouter.post("/signup", usersController.users_sign_up);
 
 usersRouter.put("/profile/:id", usersController.users_update_background_image);
 
+usersRouter.put("/profile/edit/:id", usersController.users_update_profile);
+
 // usersRouter.put(
 //   "/:id/passwords",
 //   usersController.users_update_profile_passwords

@@ -120,15 +120,9 @@ exports.users_update_background_image = [
 
     const { background_picture } = req.body;
 
-    const getUserById = await prisma.user.findFirst({
-      where: {
-        id: Number(id),
-      },
-    });
-
     const updateUserBackgroundPicture = await prisma.user.update({
       where: {
-        id: Number(getUserById.id),
+        id: Number(id),
       },
       data: {
         background_picture: background_picture,
@@ -136,5 +130,36 @@ exports.users_update_background_image = [
     });
 
     res.json({ updateUserBackgroundPicture });
+  }),
+];
+
+exports.users_update_profile = [
+  verifyToken,
+  validateUsers,
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id } = req.params;
+
+    const { first_name, last_name, username, bio, profile_picture } = req.body;
+
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const updateUserProfile = await prisma.user.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          first_name: first_name,
+          last_name: last_name,
+          username: username,
+          bio,
+          profile_picture: profile_picture,
+        },
+      });
+
+      res.json({ updateUserProfile });
+    }
   }),
 ];

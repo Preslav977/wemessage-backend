@@ -24,3 +24,23 @@ exports.conversation_create = [
     res.json({ createConversation });
   }),
 ];
+
+exports.conversation_send_message = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const { message_text, message_image } = req.body;
+
+    const sendMessageInConversation = await prisma.message.create({
+      data: {
+        message_text: message_text,
+        createdAt: new Date(),
+        userId: req.authData.id,
+        conversationId: id,
+      },
+    });
+
+    res.json({ sendMessageInConversation });
+  }),
+];

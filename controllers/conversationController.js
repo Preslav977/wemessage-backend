@@ -30,11 +30,12 @@ exports.conversation_send_message = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const { message_text, message_image } = req.body;
+    const { message_text } = req.body;
 
     const sendMessageInConversation = await prisma.message.create({
       data: {
         message_text: message_text,
+        message_image: "",
         createdAt: new Date(),
         userId: req.authData.id,
         conversationId: id,
@@ -42,6 +43,27 @@ exports.conversation_send_message = [
     });
 
     res.json({ sendMessageInConversation });
+  }),
+];
+
+exports.conversation_send_message_image = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const { message_image } = req.body;
+
+    const sendMessageImageInConversation = await prisma.message.create({
+      data: {
+        message_text: "",
+        message_image: message_image,
+        createdAt: new Date(),
+        userId: req.authData.id,
+        conversationId: id,
+      },
+    });
+
+    res.send({ sendMessageImageInConversation });
   }),
 ];
 
@@ -79,6 +101,7 @@ exports.conversation_edit_message = [
       data: {
         message_text: message_text,
         message_image: message_image,
+        updatedAt: new Date(),
       },
     });
 

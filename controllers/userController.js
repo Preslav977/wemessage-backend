@@ -50,7 +50,7 @@ exports.user_sign_up = [
           },
         });
 
-        res.json(signUpAndCreateUser);
+        res.json({ signUpAndCreateUser });
       }
     });
   }),

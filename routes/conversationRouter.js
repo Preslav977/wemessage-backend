@@ -11,6 +11,11 @@ conversationRouter.post(
   conversationController.conversation_send_message
 );
 
+conversationRouter.post(
+  "/:id/messageImage",
+  conversationController.conversation_send_message_image
+);
+
 conversationRouter.get("/:id", conversationController.conversation_details);
 
 conversationRouter.put(

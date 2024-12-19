@@ -67,6 +67,36 @@ exports.group_send_message = [
   }),
 ];
 
+exports.group_send_message_image = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id, conversationId } = req.params;
+
+    const { message_image } = req.body;
+
+    const findRelatedConversationToGroup = await prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+      },
+    });
+
+    // console.log(findRelatedConversationToGroup);
+
+    const sendMessageImageInGroup = await prisma.message.create({
+      data: {
+        message_text: "",
+        message_image: message_image,
+        createdAt: new Date(),
+        userId: req.authData.id,
+        conversationId: findRelatedConversationToGroup.id,
+        groupId: id,
+      },
+    });
+
+    res.json({ sendMessageImageInGroup });
+  }),
+];
+
 exports.group_name_update = [
   verifyToken,
   asyncHandler(async (req, res, next) => {

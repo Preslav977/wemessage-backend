@@ -11,6 +11,11 @@ groupRouter.post(
   groupController.group_send_message
 );
 
+groupRouter.post(
+  "/:id/messageImage/:conversationId",
+  groupController.group_send_message_image
+);
+
 groupRouter.put("/:id", groupController.group_name_update);
 
 module.exports = groupRouter;

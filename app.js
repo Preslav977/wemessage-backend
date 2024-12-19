@@ -24,6 +24,9 @@ const usersRouter = require("./routes/usersRouter");
 
 const conversationRouter = require("./routes/conversationRouter");
 
+const asyncHandler = require("express-async-handler");
+const verifyToken = require("./middleware/verifyToken");
+
 const app = express();
 
 app.set("views", path.join(__dirname, "views"));
@@ -114,14 +117,27 @@ app.post(
   })
 );
 
-app.get("user/logout", (req, res, next) => {
-  req.logout((err) => {
-    if (err) {
-      return next(err);
-    }
-    res.redirect("/");
-  });
-});
+app.get(
+  "/user/logout",
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    req.logout((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/user/login");
+    });
+
+    await prisma.user.update({
+      where: {
+        id: req.authData.id,
+      },
+      data: {
+        online_presence: "OFFLINE",
+      },
+    });
+  })
+);
 
 // app.use("/", indexRouter);
 

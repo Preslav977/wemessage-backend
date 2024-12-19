@@ -24,7 +24,10 @@ const usersRouter = require("./routes/usersRouter");
 
 const conversationRouter = require("./routes/conversationRouter");
 
+const groupRouter = require("./routes/groupRouter");
+
 const asyncHandler = require("express-async-handler");
+
 const verifyToken = require("./middleware/verifyToken");
 
 const app = express();
@@ -144,6 +147,8 @@ app.get(
 app.use("/user", usersRouter);
 
 app.use("/conversation", conversationRouter);
+
+app.use("/group", groupRouter);
 
 app.use((err, req, res, next) => {
   res.status(err.status || 500);

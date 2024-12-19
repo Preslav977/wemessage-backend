@@ -66,3 +66,23 @@ exports.group_send_message = [
     res.json({ sendMessageInGroup });
   }),
 ];
+
+exports.group_name_update = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const { group_name } = req.body;
+
+    const renameGroupName = await prisma.group.update({
+      where: {
+        id: id,
+      },
+      data: {
+        group_name: group_name,
+      },
+    });
+
+    res.json({ renameGroupName });
+  }),
+];

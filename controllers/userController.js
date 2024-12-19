@@ -58,13 +58,22 @@ exports.user_sign_up = [
 
 exports.user_log_in = [
   passport.authenticate("local", { session: false }),
-  (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.user;
 
     jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
       res.json({ token });
     });
-  },
+
+    await prisma.user.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        online_presence: "ONLINE",
+      },
+    });
+  }),
 ];
 
 exports.user_log_in_admin = [

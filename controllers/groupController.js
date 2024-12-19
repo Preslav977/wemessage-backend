@@ -36,3 +36,33 @@ exports.group_create = [
     res.json({ createGroup });
   }),
 ];
+
+exports.group_send_message = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id, conversationId } = req.params;
+
+    const { message_text } = req.body;
+
+    const findRelatedConversationToGroup = await prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+      },
+    });
+
+    // console.log(findRelatedConversationToGroup);
+
+    const sendMessageInGroup = await prisma.message.create({
+      data: {
+        message_text: message_text,
+        message_image: "",
+        createdAt: new Date(),
+        userId: req.authData.id,
+        conversationId: findRelatedConversationToGroup.id,
+        groupId: id,
+      },
+    });
+
+    res.json({ sendMessageInGroup });
+  }),
+];

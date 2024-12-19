@@ -217,3 +217,15 @@ exports.user_update_passwords = [
     });
   }),
 ];
+
+exports.user_search = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { first_name, last_name } = req.query;
+
+    const searchForUser =
+      await prisma.$queryRaw`SELECT * FROM "user" WHERE first_name ILIKE CONCAT('%', ${first_name}, '%') AND last_name ILIKE CONCAT('%', ${last_name}, '%')`;
+
+    res.json({ searchForUser });
+  }),
+];

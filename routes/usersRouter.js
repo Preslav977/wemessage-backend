@@ -23,4 +23,6 @@ userRouter.put(
   userController.user_update_passwords
 );
 
+userRouter.get("/search", userController.user_search);
+
 module.exports = userRouter;

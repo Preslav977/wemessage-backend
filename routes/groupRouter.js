@@ -25,4 +25,6 @@ groupRouter.delete(
   groupController.group_delete_message
 );
 
+groupRouter.delete("/:id", groupController.group_delete);
+
 module.exports = groupRouter;

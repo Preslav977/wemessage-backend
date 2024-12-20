@@ -179,3 +179,18 @@ exports.group_delete_message = [
     res.json({ message: "Message has been deleted." });
   }),
 ];
+
+exports.group_delete = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const deleteGroup = await prisma.group.delete({
+      where: {
+        id: id,
+      },
+    });
+
+    res.json({ message: "Group has been deleted." });
+  }),
+];

@@ -116,3 +116,39 @@ exports.group_name_update = [
     res.json({ renameGroupName });
   }),
 ];
+
+exports.group_edit_message = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id, messageId } = req.params;
+
+    const { message_text } = req.body;
+
+    console.log(id, messageId);
+
+    const findByGroupId = await prisma.group.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        conversations: true,
+      },
+    });
+
+    const editMessageInGroup = await prisma.message.update({
+      where: {
+        id: Number(messageId),
+        userId: req.authData.id,
+        conversationId: findByGroupId.conversations[0].id,
+        groupId: id,
+      },
+      data: {
+        message_text: message_text,
+        message_image: "",
+        updatedAt: new Date(),
+      },
+    });
+
+    res.json({ editMessageInGroup });
+  }),
+];

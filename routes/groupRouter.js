@@ -18,4 +18,6 @@ groupRouter.post(
 
 groupRouter.put("/:id", groupController.group_name_update);
 
+groupRouter.put("/:id/message/:messageId", groupController.group_edit_message);
+
 module.exports = groupRouter;

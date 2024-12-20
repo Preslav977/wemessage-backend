@@ -20,9 +20,9 @@ const bcrypt = require("bcryptjs");
 
 const indexRouter = require("./routes/indexRouter");
 
-const usersRouter = require("./routes/usersRouter");
+const userRouter = require("./routes/userRouter");
 
-const conversationRouter = require("./routes/conversationRouter");
+const chatRouter = require("./routes/chatRouter");
 
 const groupRouter = require("./routes/groupRouter");
 
@@ -139,11 +139,11 @@ app.get(
 
 // app.use("/", indexRouter);
 
-app.use("/user", usersRouter);
+app.use("/users", userRouter);
 
-app.use("/conversation", conversationRouter);
+app.use("/chats", chatRouter);
 
-app.use("/group", groupRouter);
+app.use("/groups", groupRouter);
 
 app.use((err, req, res, next) => {
   res.status(err.status || 500);

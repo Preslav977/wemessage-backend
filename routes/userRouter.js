@@ -4,7 +4,7 @@ const userRouter = Router();
 
 const userController = require("../controllers/userController");
 
-userRouter.get("/", userController.user_get_detail);
+userRouter.post("/signup", userController.user_sign_up);
 
 userRouter.post("/login", userController.user_log_in);
 
@@ -12,7 +12,7 @@ userRouter.post("/login_admin", userController.user_log_in_admin);
 
 userRouter.post("/login_guest", userController.user_log_in_guest);
 
-userRouter.post("/signup", userController.user_sign_up);
+userRouter.get("/", userController.user_get_details);
 
 userRouter.put("/profile/:id", userController.user_update_background_image);
 

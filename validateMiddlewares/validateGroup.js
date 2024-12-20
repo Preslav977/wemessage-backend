@@ -8,12 +8,13 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-const validateGroups = [
+const validateGroup = [
   body("group_name")
     .trim()
     .isLength({ min: 3, max: 30 })
     .escape()
     .withMessage(`Group name ${groupLengthErr}`),
+
   body("group_name").custom(async (value) => {
     const findIfGroupNameExists = await prisma.group.findUnique({
       where: {
@@ -26,3 +27,5 @@ const validateGroups = [
     }
   }),
 ];
+
+module.exports = validateGroup;

@@ -6,17 +6,15 @@ const groupController = require("../controllers/groupController");
 
 groupRouter.post("/", groupController.group_create);
 
-groupRouter.post(
-  "/:id/message/:conversationId",
-  groupController.group_send_message
-);
+groupRouter.post("/:id/message/:chatId", groupController.group_send_message);
 
-groupRouter.post(
-  "/:id/messageImage/:conversationId",
-  groupController.group_send_message_image
-);
+groupRouter.post("/:id/image/:chatId", groupController.group_send_image);
 
-groupRouter.put("/:id", groupController.group_name_update);
+groupRouter.get("/:id", groupController.group_details);
+
+groupRouter.get("/", groupController.groups_details);
+
+groupRouter.put("/:id", groupController.group_update);
 
 groupRouter.put("/:id/message/:messageId", groupController.group_edit_message);
 
@@ -26,9 +24,5 @@ groupRouter.delete(
 );
 
 groupRouter.delete("/:id", groupController.group_delete);
-
-groupRouter.get("/:id", groupController.group_details);
-
-groupRouter.get("/", groupController.groups_details);
 
 module.exports = groupRouter;

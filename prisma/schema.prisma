@@ -25,26 +25,26 @@ enum Presence {
 }
 
 model User {
-  id                 Int            @id @default(autoincrement())
-  first_name         String         @unique
-  last_name          String         @unique
-  username           String         @unique
+  id                 Int       @id @default(autoincrement())
+  first_name         String    @unique
+  last_name          String    @unique
+  username           String    @unique
   password           String
   confirm_password   String
   bio                String?
   profile_picture    String
   background_picture String
-  online_presence    Presence       @default(OFFLINE)
-  role               Role           @default(USER)
-  conversations      Conversation[]
+  online_presence    Presence  @default(OFFLINE)
+  role               Role      @default(USER)
+  chats              Chat[]
   messages           Message[]
-  group              Group?         @relation(fields: [groupId], references: [id])
+  group              Group?    @relation(fields: [groupId], references: [id])
   groupId            String?
 
   @@map("user")
 }
 
-model Conversation {
+model Chat {
   id       String    @id @default(uuid())
   users    User[]
   messages Message[]
@@ -55,27 +55,27 @@ model Conversation {
 }
 
 model Message {
-  id             Int          @id @default(autoincrement())
-  message_text   String
-  message_image  String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         Int
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  conversationId String
-  group          Group?       @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId        String?
+  id            Int      @id @default(autoincrement())
+  message_text  String
+  message_image String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int
+  chat          Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId        String
+  group         Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId       String?
 
   @@map("message")
 }
 
 model Group {
-  id            String         @id @default(uuid())
-  group_name    String         @unique
-  users         User[]
-  conversations Conversation[]
-  messages      Message[]
+  id         String    @id @default(uuid())
+  group_name String    @unique
+  users      User[]
+  chats      Chat[]
+  messages   Message[]
 
   @@map("group")
 }

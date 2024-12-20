@@ -2,23 +2,23 @@ const { validationResult } = require("express-validator");
 
 const bcrypt = require("bcryptjs");
 
-const asyncHandler = require("express-async-handler");
-
-const validateUserRegistration = require("../validateMiddlewares/validateUserRegistration");
-
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
-
 const passport = require("passport");
 
 const jwt = require("jsonwebtoken");
 
 const verifyToken = require("../middleware/verifyToken");
 
+const asyncHandler = require("express-async-handler");
+
+const validateUserRegistration = require("../validateMiddlewares/validateUserRegistration");
+
 const validateUserProfile = require("../validateMiddlewares/validateUserProfile");
 
 const validateUserProfilePasswords = require("../validateMiddlewares/validateUserProfilePasswords");
+
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
 
 exports.user_sign_up = [
   validateUserRegistration,
@@ -114,7 +114,7 @@ exports.user_log_in_guest = [
   },
 ];
 
-exports.user_get_detail = [
+exports.user_get_details = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
     const getUserById = await prisma.user.findFirst({
@@ -167,7 +167,7 @@ exports.user_update_profile = [
           first_name: first_name,
           last_name: last_name,
           username: username,
-          bio,
+          bio: bio,
           profile_picture: profile_picture,
         },
       });

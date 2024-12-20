@@ -2,154 +2,206 @@ const { validationResult } = require("express-validator");
 
 const asyncHandler = require("express-async-handler");
 
+const verifyToken = require("../middleware/verifyToken");
+
+const validateGroup = require("../validateMiddlewares/validateGroup");
+
+const validateMessage = require("../validateMiddlewares/validateMessage");
+
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-const verifyToken = require("../middleware/verifyToken");
-
 exports.group_create = [
   verifyToken,
+  validateGroup,
   asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
     const { id, group_name } = req.body;
 
-    const createGroupConversation = await prisma.conversation.create({
-      data: {
-        users: {
-          connect: [{ id: req.authData.id }, { id: Number(id) }],
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const createGroupChat = await prisma.chat.create({
+        data: {
+          users: {
+            connect: [{ id: req.authData.id }, { id: Number(id) }],
+          },
         },
-      },
-    });
+      });
 
-    const createGroup = await prisma.group.create({
-      data: {
-        group_name: group_name,
-        users: {
-          connect: [{ id: req.authData.id }, { id: Number(id) }],
+      const createGroup = await prisma.group.create({
+        data: {
+          group_name: group_name,
+          users: {
+            connect: [{ id: req.authData.id }, { id: Number(id) }],
+          },
+          chats: {
+            connect: [{ id: createGroupChat.id }],
+          },
         },
-        conversations: {
-          connect: [{ id: createGroupConversation.id }],
-        },
-      },
-    });
+      });
 
-    res.json({ createGroup });
+      res.json({ createGroup });
+    }
   }),
 ];
 
 exports.group_send_message = [
   verifyToken,
+  validateMessage,
   asyncHandler(async (req, res, next) => {
-    const { id, conversationId } = req.params;
+    const errors = validationResult(req);
+
+    const { id, chatId } = req.params;
 
     const { message_text } = req.body;
 
-    const findRelatedConversationToGroup = await prisma.conversation.findFirst({
-      where: {
-        id: conversationId,
-      },
-    });
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const findRelatedChatToGroup = await prisma.chat.findFirst({
+        where: {
+          id: chatId,
+        },
+      });
 
-    // console.log(findRelatedConversationToGroup);
+      const sendMessageInGroup = await prisma.message.create({
+        data: {
+          message_text: message_text,
+          message_image: "",
+          createdAt: new Date(),
+          userId: req.authData.id,
+          chatId: findRelatedChatToGroup.id,
+          groupId: id,
+        },
+      });
 
-    const sendMessageInGroup = await prisma.message.create({
-      data: {
-        message_text: message_text,
-        message_image: "",
-        createdAt: new Date(),
-        userId: req.authData.id,
-        conversationId: findRelatedConversationToGroup.id,
-        groupId: id,
-      },
-    });
-
-    res.json({ sendMessageInGroup });
+      res.json({ sendMessageInGroup });
+    }
   }),
 ];
 
-exports.group_send_message_image = [
+exports.group_send_image = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
-    const { id, conversationId } = req.params;
+    const { id, chatId } = req.params;
 
     const { message_image } = req.body;
 
-    const findRelatedConversationToGroup = await prisma.conversation.findFirst({
+    const findRelatedChatToGroup = await prisma.chat.findFirst({
       where: {
-        id: conversationId,
+        id: chatId,
       },
     });
 
-    // console.log(findRelatedConversationToGroup);
-
-    const sendMessageImageInGroup = await prisma.message.create({
+    const sendImageInGroup = await prisma.message.create({
       data: {
         message_text: "",
         message_image: message_image,
         createdAt: new Date(),
         userId: req.authData.id,
-        conversationId: findRelatedConversationToGroup.id,
+        chatId: findRelatedChatToGroup.id,
         groupId: id,
       },
     });
 
-    res.json({ sendMessageImageInGroup });
+    res.json({ sendImageInGroup });
   }),
 ];
 
-exports.group_name_update = [
+exports.group_details = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-
-    const { group_name } = req.body;
-
-    const renameGroupName = await prisma.group.update({
-      where: {
-        id: id,
-      },
-      data: {
-        group_name: group_name,
-      },
-    });
-
-    res.json({ renameGroupName });
-  }),
-];
-
-exports.group_edit_message = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const { id, messageId } = req.params;
-
-    const { message_text } = req.body;
-
-    console.log(id, messageId);
 
     const findByGroupId = await prisma.group.findFirst({
       where: {
         id: id,
       },
       include: {
-        conversations: true,
+        chat: true,
+        users: true,
       },
     });
 
-    const editMessageInGroup = await prisma.message.update({
-      where: {
-        id: Number(messageId),
-        userId: req.authData.id,
-        conversationId: findByGroupId.conversations[0].id,
-        groupId: id,
-      },
-      data: {
-        message_text: message_text,
-        message_image: "",
-        updatedAt: new Date(),
-      },
-    });
+    res.json({ findByGroupId });
+  }),
+];
 
-    res.json({ editMessageInGroup });
+exports.groups_get = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const findAllGroups = await prisma.group.findMany({});
+
+    res.json({ findAllGroups });
+  }),
+];
+
+exports.group_update = [
+  verifyToken,
+  validateGroup,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const { group_name } = req.body;
+
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const editGroupName = await prisma.group.update({
+        where: {
+          id: id,
+        },
+        data: {
+          group_name: group_name,
+        },
+      });
+
+      res.json({ editGroupName });
+    }
+  }),
+];
+
+exports.group_edit_message = [
+  verifyToken,
+  validateMessage,
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id, messageId } = req.params;
+
+    const { message_text } = req.body;
+
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const findByGroupId = await prisma.group.findFirst({
+        where: {
+          id: id,
+        },
+        include: {
+          chats: true,
+        },
+      });
+
+      const editMessageInGroup = await prisma.message.update({
+        where: {
+          id: Number(messageId),
+          userId: req.authData.id,
+          chatId: findByGroupId.conversations[0].id,
+          groupId: id,
+        },
+        data: {
+          message_text: message_text,
+          message_image: "",
+          updatedAt: new Date(),
+        },
+      });
+
+      res.json({ editMessageInGroup });
+    }
   }),
 ];
 
@@ -163,7 +215,7 @@ exports.group_delete_message = [
         id: id,
       },
       include: {
-        conversations: true,
+        chat: true,
       },
     });
 
@@ -171,7 +223,7 @@ exports.group_delete_message = [
       where: {
         id: Number(messageId),
         userId: req.authData.id,
-        conversationId: findByGroupId.conversations[0].id,
+        chatId: findByGroupId.chat[0].id,
         groupId: id,
       },
     });
@@ -192,33 +244,5 @@ exports.group_delete = [
     });
 
     res.json({ message: "Group has been deleted." });
-  }),
-];
-
-exports.group_details = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-
-    const findByGroupId = await prisma.group.findFirst({
-      where: {
-        id: id,
-      },
-      include: {
-        conversations: true,
-        users: true,
-      },
-    });
-
-    res.json({ findByGroupId });
-  }),
-];
-
-exports.groups_details = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const findAllGroups = await prisma.group.findMany({});
-
-    res.json({ findAllGroups });
   }),
 ];

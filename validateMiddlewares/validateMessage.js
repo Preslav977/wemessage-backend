@@ -2,7 +2,7 @@ const { body } = require("express-validator");
 
 const messageLengthErr = "must be no more than 300 characters.";
 
-const validateMessages = [
+const validateMessage = [
   body("message_text")
     .trim()
     .isLength({ max: 300 })
@@ -10,4 +10,4 @@ const validateMessages = [
     .withMessage(`Message text ${messageLengthErr}`),
 ];
 
-module.exports = validateMessages;
+module.exports = validateMessage;

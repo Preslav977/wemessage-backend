@@ -194,3 +194,22 @@ exports.group_delete = [
     res.json({ message: "Group has been deleted." });
   }),
 ];
+
+exports.group_details = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const findByGroupId = await prisma.group.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        conversations: true,
+        users: true,
+      },
+    });
+
+    res.json({ findByGroupId });
+  }),
+];

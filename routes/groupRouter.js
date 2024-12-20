@@ -20,4 +20,9 @@ groupRouter.put("/:id", groupController.group_name_update);
 
 groupRouter.put("/:id/message/:messageId", groupController.group_edit_message);
 
+groupRouter.delete(
+  "/:id/message/:messageId",
+  groupController.group_delete_message
+);
+
 module.exports = groupRouter;

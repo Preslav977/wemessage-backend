@@ -152,3 +152,30 @@ exports.group_edit_message = [
     res.json({ editMessageInGroup });
   }),
 ];
+
+exports.group_delete_message = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id, messageId } = req.params;
+
+    const findByGroupId = await prisma.group.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        conversations: true,
+      },
+    });
+
+    const deleteMessageInGroup = await prisma.message.delete({
+      where: {
+        id: Number(messageId),
+        userId: req.authData.id,
+        conversationId: findByGroupId.conversations[0].id,
+        groupId: id,
+      },
+    });
+
+    res.json({ message: "Message has been deleted." });
+  }),
+];

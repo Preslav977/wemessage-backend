@@ -29,4 +29,6 @@ groupRouter.delete("/:id", groupController.group_delete);
 
 groupRouter.get("/:id", groupController.group_details);
 
+groupRouter.get("/", groupController.groups_details);
+
 module.exports = groupRouter;

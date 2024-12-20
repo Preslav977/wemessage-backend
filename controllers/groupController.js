@@ -213,3 +213,12 @@ exports.group_details = [
     res.json({ findByGroupId });
   }),
 ];
+
+exports.groups_details = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const findAllGroups = await prisma.group.findMany({});
+
+    res.json({ findAllGroups });
+  }),
+];

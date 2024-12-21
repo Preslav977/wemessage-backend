@@ -12,7 +12,7 @@ groupRouter.post("/:id/image/:chatId", groupController.group_send_image);
 
 groupRouter.get("/:id", groupController.group_details);
 
-groupRouter.get("/", groupController.groups_details);
+groupRouter.get("/", groupController.groups_get);
 
 groupRouter.put("/:id", groupController.group_update);
 

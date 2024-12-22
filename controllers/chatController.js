@@ -10,7 +10,9 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-const supabase = require("../middleware/supabase");
+const cloudinary = require("cloudinary").v2;
+
+const upload = require("../middleware/multer");
 
 exports.chat_create = [
   verifyToken,
@@ -45,7 +47,7 @@ exports.chat_send_message = [
       const sendMessageInChat = await prisma.message.create({
         data: {
           message_text: message_text,
-          message_image: "",
+          message_imageURL: "",
           createdAt: new Date(),
           userId: req.authData.id,
           chatId: id,
@@ -67,7 +69,7 @@ exports.chat_send_image = [
     const sendImageInChat = await prisma.message.create({
       data: {
         message_text: "",
-        message_image: message_image,
+        message_imageURL: message_image,
         createdAt: new Date(),
         userId: req.authData.id,
         chatId: id,
@@ -130,7 +132,7 @@ exports.chat_edit_message = [
         },
         data: {
           message_text: message_text,
-          message_image: message_image,
+          message_imageURL: message_image,
           updatedAt: new Date(),
         },
       });

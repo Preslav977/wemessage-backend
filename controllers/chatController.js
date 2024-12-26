@@ -14,6 +14,14 @@ const cloudinary = require("cloudinary").v2;
 
 const upload = require("../middleware/multer");
 
+const handleFileUpload = require("../middleware/handleFileUpload");
+
+const runMiddleware = require("../middleware/runMiddleware");
+
+const multerFileUploadMiddleware = upload.single("file");
+
+const formatFileSize = require("../middleware/formatImageSize");
+
 exports.chat_create = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
@@ -48,6 +56,8 @@ exports.chat_send_message = [
         data: {
           message_text: message_text,
           message_imageURL: "",
+          message_imageType: "",
+          message_imageSize: "",
           createdAt: new Date(),
           userId: req.authData.id,
           chatId: id,
@@ -62,14 +72,24 @@ exports.chat_send_message = [
 exports.chat_send_image = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
+    await runMiddleware(req, res, multerFileUploadMiddleware);
+
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+    const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+    const cloudinaryResponse = await handleFileUpload(dataURI);
+
     const { id } = req.params;
 
-    const { message_image } = req.body;
+    console.log(id);
 
     const sendImageInChat = await prisma.message.create({
       data: {
         message_text: "",
-        message_imageURL: message_image,
+        message_imageURL: cloudinaryResponse.secure_url,
+        message_imageType: cloudinaryResponse.format,
+        message_imageSize: formatFileSize(req.file.size),
         createdAt: new Date(),
         userId: req.authData.id,
         chatId: id,
@@ -132,7 +152,6 @@ exports.chat_edit_message = [
         },
         data: {
           message_text: message_text,
-          message_imageURL: message_image,
           updatedAt: new Date(),
         },
       });

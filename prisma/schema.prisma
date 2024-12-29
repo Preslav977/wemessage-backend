@@ -57,6 +57,7 @@ model Chat {
 model Message {
   id                Int      @id @default(autoincrement())
   message_text      String
+  message_imageName String
   message_imageURL  String
   message_imageType String
   message_imageSize String

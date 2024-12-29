@@ -107,9 +107,10 @@ exports.chat_send_image = [
       const sendImageInChat = await prisma.message.create({
         data: {
           message_text: "",
+          message_imageName: req.file.originalname,
           message_imageURL: cloudinaryResponse.secure_url,
           message_imageType: req.file.mimetype,
-          message_imageSize: req.file.size,
+          message_imageSize: formatImageSize(req.file.size),
           createdAt: new Date(),
           userId: req.authData.id,
           chatId: id,
@@ -193,6 +194,14 @@ exports.chat_delete_message = [
         userId: req.authData.id,
       },
     });
+
+    if (deleteMessageInChat.message_imageURL !== "") {
+      const deleteImageFromCloudinary = await cloudinary.uploader.destroy(
+        `wemessage_images/${deleteMessageInChat.message_imageName}`
+      );
+
+      console.log(deleteImageFromCloudinary);
+    }
 
     res.json({ message: "Message has been deleted." });
   }),

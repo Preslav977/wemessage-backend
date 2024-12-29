@@ -111,7 +111,7 @@ exports.chat_send_image = [
           message_imageName: req.file.originalname,
           message_imageURL: cloudinaryResponse.secure_url,
           message_imageType: req.file.mimetype,
-          message_imageSize: formatImageSize(req.file.size),
+          message_imageSize: req.file.size,
           createdAt: new Date(),
           userId: req.authData.id,
           chatId: id,

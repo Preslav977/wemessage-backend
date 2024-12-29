@@ -32,7 +32,7 @@ exports.group_create = [
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
-    const { id, group_name } = req.body;
+    const { group_name, id } = req.body;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -57,7 +57,7 @@ exports.group_create = [
         },
       });
 
-      res.json({ createGroup });
+      res.json({ createGroupChat, createGroup });
     }
   }),
 ];
@@ -145,7 +145,7 @@ exports.group_send_image = [
           message_imageName: req.file.originalname,
           message_imageURL: cloudinaryResponse.secure_url,
           message_imageType: req.file.mimetype,
-          message_imageSize: formatImageSize(req.file.size),
+          message_imageSize: req.file.size,
           createdAt: new Date(),
           userId: req.authData.id,
           chatId: findRelatedChatToGroup.id,
@@ -292,9 +292,30 @@ exports.group_delete = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const deleteGroup = await prisma.group.delete({
+    const checkIfGroupExists = await prisma.group.findFirst({
       where: {
         id: id,
+      },
+      include: {
+        messages: true,
+      },
+    });
+
+    const [groupImagesArray] = [checkIfGroupExists.messages];
+
+    async function loopArray(groupImagesArray) {
+      groupImagesArray.forEach(async (img) => {
+        await cloudinary.uploader.destroy(
+          `wemessage_images/${img.message_imageName}`
+        );
+      });
+    }
+
+    console.log(loopArray(groupImagesArray));
+
+    await prisma.group.delete({
+      where: {
+        id: checkIfGroupExists.id,
       },
     });
 

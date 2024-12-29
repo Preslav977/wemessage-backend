@@ -8,9 +8,11 @@ const cloudinary = require("cloudinary").v2;
 
 const validateImage = [
   check("file").custom(async (value, { req }) => {
-    const uploadedImageSize = formatImageSize(req.file.size);
+    const uploadedImageSize = req.file.size;
 
-    if (uploadedImageSize >= "5 MB") {
+    console.log(uploadedImageSize);
+
+    if (uploadedImageSize > 5000000) {
       const deleteUploadedImage = await cloudinary.uploader.destroy(
         `wemessage_images/${req.file.originalname}`
       );

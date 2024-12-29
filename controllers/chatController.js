@@ -20,7 +20,9 @@ const runMiddleware = require("../middleware/runMiddleware");
 
 const multerFileUploadMiddleware = upload.single("file");
 
-const formatFileSize = require("../middleware/formatImageSize");
+const formatImageSize = require("../middleware/formatImageSize");
+
+const validateImage = require("../validateMiddlewares/validateImage");
 
 exports.chat_create = [
   verifyToken,
@@ -69,35 +71,53 @@ exports.chat_send_message = [
   }),
 ];
 
+let cloudinaryResponse;
+
 exports.chat_send_image = [
   verifyToken,
+
   asyncHandler(async (req, res, next) => {
-    await runMiddleware(req, res, multerFileUploadMiddleware);
+    try {
+      await runMiddleware(req, res, multerFileUploadMiddleware);
 
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
 
-    const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
 
-    const cloudinaryResponse = await handleFileUpload(dataURI);
+      cloudinaryResponse = await handleFileUpload(
+        dataURI,
+        req.file.originalname
+      );
+
+      next();
+    } catch (error) {
+      res.json(error.message);
+    }
+  }),
+
+  validateImage,
+  async (req, res, next) => {
+    const errors = validationResult(req);
 
     const { id } = req.params;
 
-    console.log(id);
-
-    const sendImageInChat = await prisma.message.create({
-      data: {
-        message_text: "",
-        message_imageURL: cloudinaryResponse.secure_url,
-        message_imageType: cloudinaryResponse.format,
-        message_imageSize: formatFileSize(req.file.size),
-        createdAt: new Date(),
-        userId: req.authData.id,
-        chatId: id,
-      },
-    });
-
-    res.send({ sendImageInChat });
-  }),
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const sendImageInChat = await prisma.message.create({
+        data: {
+          message_text: "",
+          message_imageURL: cloudinaryResponse.secure_url,
+          message_imageType: req.file.mimetype,
+          message_imageSize: req.file.size,
+          createdAt: new Date(),
+          userId: req.authData.id,
+          chatId: id,
+        },
+      });
+      res.send({ sendImageInChat });
+    }
+  },
 ];
 
 exports.chat_details = [

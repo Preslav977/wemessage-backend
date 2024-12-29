@@ -12,6 +12,20 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+const upload = require("../middleware/multer");
+
+const cloudinary = require("cloudinary").v2;
+
+const handleFileUpload = require("../middleware/handleFileUpload");
+
+const runMiddleware = require("../middleware/runMiddleware");
+
+const multerFileUploadMiddleware = upload.single("file");
+
+const formatImageSize = require("../middleware/formatImageSize");
+
+const validateImage = require("../validateMiddlewares/validateImage");
+
 exports.group_create = [
   verifyToken,
   validateGroup,
@@ -70,7 +84,10 @@ exports.group_send_message = [
       const sendMessageInGroup = await prisma.message.create({
         data: {
           message_text: message_text,
-          message_image: "",
+          message_imageName: "",
+          message_imageURL: "",
+          message_imageType: "",
+          message_imageSize: "",
           createdAt: new Date(),
           userId: req.authData.id,
           chatId: findRelatedChatToGroup.id,
@@ -83,12 +100,35 @@ exports.group_send_message = [
   }),
 ];
 
+let cloudinaryResponse;
+
 exports.group_send_image = [
   verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const { id, chatId } = req.params;
 
-    const { message_image } = req.body;
+  asyncHandler(async (req, res, next) => {
+    try {
+      await runMiddleware(req, res, multerFileUploadMiddleware);
+
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+      cloudinaryResponse = await handleFileUpload(
+        dataURI,
+        req.file.originalname
+      );
+
+      next();
+    } catch (error) {
+      res.json(error.message);
+    }
+  }),
+
+  validateImage,
+  async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id, chatId } = req.params;
 
     const findRelatedChatToGroup = await prisma.chat.findFirst({
       where: {
@@ -96,19 +136,26 @@ exports.group_send_image = [
       },
     });
 
-    const sendImageInGroup = await prisma.message.create({
-      data: {
-        message_text: "",
-        message_image: message_image,
-        createdAt: new Date(),
-        userId: req.authData.id,
-        chatId: findRelatedChatToGroup.id,
-        groupId: id,
-      },
-    });
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const sendImageInGroup = await prisma.message.create({
+        data: {
+          message_text: "",
+          message_imageName: req.file.originalname,
+          message_imageURL: cloudinaryResponse.secure_url,
+          message_imageType: req.file.mimetype,
+          message_imageSize: formatImageSize(req.file.size),
+          createdAt: new Date(),
+          userId: req.authData.id,
+          chatId: findRelatedChatToGroup.id,
+          groupId: id,
+        },
+      });
 
-    res.json({ sendImageInGroup });
-  }),
+      res.json({ sendImageInGroup });
+    }
+  },
 ];
 
 exports.group_details = [
@@ -227,6 +274,14 @@ exports.group_delete_message = [
         groupId: id,
       },
     });
+
+    if (deleteMessageInGroup.message_imageURL !== "") {
+      const deleteImageFromCloudinary = await cloudinary.uploader.destroy(
+        `wemessage_images/${deleteMessageInGroup.message_imageName}`
+      );
+
+      console.log(deleteImageFromCloudinary);
+    }
 
     res.json({ message: "Message has been deleted." });
   }),

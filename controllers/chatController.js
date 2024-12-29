@@ -57,6 +57,7 @@ exports.chat_send_message = [
       const sendMessageInChat = await prisma.message.create({
         data: {
           message_text: message_text,
+          message_imageName: "",
           message_imageURL: "",
           message_imageType: "",
           message_imageSize: "",

@@ -25,10 +25,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --watch app.js",
     "populate": "node db/populatedb.js",
-    "format": "npx prisma format"
+    "format": "npx prisma format",
+    "dev": "NODE_ENV=development && node app.js",
+    "test": "NODE_ENV=test && jest"
   },
   "keywords": [],
   "author": "",

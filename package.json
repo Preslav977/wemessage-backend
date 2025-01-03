@@ -29,7 +29,7 @@
     "populate": "node db/populatedb.js",
     "format": "npx prisma format",
     "dev": "NODE_ENV=development && node app.js",
-    "test": "NODE_ENV=test && jest"
+    "test": "NODE_ENV=test && clear && jest"
   },
   "keywords": [],
   "author": "",

@@ -321,5 +321,34 @@ describe("testing user controllers and routes", () => {
 
       expect(body.signUpAndCreateUser.groupId).toEqual(null);
     });
+
+    it("should response with 400 if user with that details already exists", async () => {
+      const { status, header, body } = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "preslaw",
+          last_name: "cvetanow",
+          username: "preslaw",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const findRegisteredUser = await prisma.user.findFirst();
+
+      expect(status).toBe(400);
+
+      expect(header["content-type"]).toMatch(/json/);
+
+      expect(findRegisteredUser).not.toBeNull();
+
+      expect(body[0].msg).toEqual("First name is already taken");
+
+      expect(body[1].msg).toEqual("Last name is already taken");
+
+      expect(body[2].msg).toEqual("Username is already taken");
+    });
   });
 });

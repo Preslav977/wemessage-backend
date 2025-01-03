@@ -22,6 +22,8 @@ const verifyToken = require("../middleware/verifyToken");
 
 const asyncHandler = require("express-async-handler");
 
+const jwt = require("jsonwebtoken");
+
 const app = express();
 
 app.use(
@@ -55,7 +57,7 @@ passport.use(
         },
       });
 
-      // console.log(user);
+      console.log(user);
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
@@ -93,7 +95,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  "/users/login",
+  "users/login",
   passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/",
@@ -101,7 +103,7 @@ app.post(
 );
 
 app.get(
-  "/users/logout",
+  "users/logout",
   verifyToken,
   asyncHandler(async (req, res, next) => {
     req.logout((err) => {
@@ -350,5 +352,16 @@ describe("testing user controllers and routes", () => {
 
       expect(body[2].msg).toEqual("Username is already taken");
     });
+  });
+
+  it("should respond with a valid session token when successful", async () => {
+    const { body } = await request(app).post("/users/login").send({
+      username: "preslaw",
+      password: "12345678Bg@",
+    });
+
+    expect(body).toHaveProperty("token");
+
+    expect(jwt.verify(body.token, process.env.SECRET) === String);
   });
 });

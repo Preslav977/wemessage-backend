@@ -24,103 +24,103 @@ const asyncHandler = require("express-async-handler");
 
 const app = express();
 
-// app.use(
-//   session({
-//     cookie: {
-//       maxAge: 24 * 60 * 60 * 1000,
-//     },
-//     secret: process.env.sessionSecret,
-//     resave: false,
-//     saveUninitialized: false,
-//     store: new PrismaSessionStore(new PrismaClient(), {
-//       checkPeriod: 2 * 60 * 1000,
-//       dbRecordIdIsSessionId: true,
-//       dbRecordIdFunction: undefined,
-//     }),
-//   })
-// );
+app.use(
+  session({
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+    secret: process.env.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    store: new PrismaSessionStore(new PrismaClient(), {
+      checkPeriod: 2 * 60 * 1000,
+      dbRecordIdIsSessionId: true,
+      dbRecordIdFunction: undefined,
+    }),
+  })
+);
 
-// app.use(passport.session());
+app.use(passport.session());
 
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-// passport.use(
-//   new LocalStrategy(async (username, password, done) => {
-//     try {
-//       const user = await prisma.user.findFirst({
-//         where: {
-//           username: username,
-//         },
-//       });
+passport.use(
+  new LocalStrategy(async (username, password, done) => {
+    try {
+      const user = await prisma.user.findFirst({
+        where: {
+          username: username,
+        },
+      });
 
-//       // console.log(user);
+      // console.log(user);
 
-//       if (!user) {
-//         return done(null, false, { message: "Incorrect username" });
-//       }
-//       const match = await bcrypt.compare(password, user.password);
-//       // console.log(match, password, user.password);
-//       if (!match) {
-//         return done(null, false, { message: "Incorrect password" });
-//       }
-//       return done(null, user);
-//     } catch (err) {
-//       return done(err);
-//     }
-//   })
-// );
+      if (!user) {
+        return done(null, false, { message: "Incorrect username" });
+      }
+      const match = await bcrypt.compare(password, user.password);
+      // console.log(match, password, user.password);
+      if (!match) {
+        return done(null, false, { message: "Incorrect password" });
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  })
+);
 
-// passport.serializeUser((user, done) => {
-//   done(null, user.id);
-// });
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
 
-// passport.deserializeUser(async (id, done) => {
-//   try {
-//     const user = await prisma.user.findFirst({
-//       where: {
-//         id: Number(id),
-//       },
-//     });
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
 
-//     // console.log(user);
+    // console.log(user);
 
-//     done(null, user);
-//   } catch (err) {
-//     done(err);
-//   }
-// });
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
 
-// app.post(
-//   "/users/login",
-//   passport.authenticate("local", {
-//     successRedirect: "/",
-//     failureRedirect: "/",
-//   })
-// );
+app.post(
+  "/users/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/",
+  })
+);
 
-// app.get(
-//   "/users/logout",
-//   verifyToken,
-//   asyncHandler(async (req, res, next) => {
-//     req.logout((err) => {
-//       if (err) {
-//         return next(err);
-//       }
-//       res.redirect("/user/login");
-//     });
+app.get(
+  "/users/logout",
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    req.logout((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/user/login");
+    });
 
-//     await prisma.user.update({
-//       where: {
-//         id: req.authData.id,
-//       },
-//       data: {
-//         online_presence: "OFFLINE",
-//       },
-//     });
-//   })
-// );
+    await prisma.user.update({
+      where: {
+        id: req.authData.id,
+      },
+      data: {
+        online_presence: "OFFLINE",
+      },
+    });
+  })
+);
 
 // const PORT = process.env.PORT || 3000;
 
@@ -141,9 +141,15 @@ const prisma = new PrismaClient({
   },
 });
 
-describe("/auth", () => {
-  describe("[POST] /auth/signup", () => {
-    it("users should able to sign up", async () => {
+describe("testing user controllers and routes", () => {
+  beforeAll(() => {});
+
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+  });
+
+  describe("[POST] /users/signup", () => {
+    it("should response with a 200 status code an user details", async () => {
       const { status, header, body } = await request(app)
         .post("/users/signup")
         .send({
@@ -165,7 +171,31 @@ describe("/auth", () => {
 
       expect(findRegisteredUser).not.toBeNull();
 
-      console.log(findRegisteredUser.first_name);
+      expect(body.signUpAndCreateUser.first_name).toEqual("preslaw");
+
+      expect(body.signUpAndCreateUser.last_name).toEqual("cvetanow");
+
+      expect(body.signUpAndCreateUser.username).toEqual("preslaw");
+
+      expect(body.signUpAndCreateUser.password).toEqual(
+        body.signUpAndCreateUser.password
+      );
+
+      expect(body.signUpAndCreateUser.confirm_password).toEqual(
+        body.signUpAndCreateUser.confirm_password
+      );
+
+      expect(body.signUpAndCreateUser.bio).toEqual("");
+
+      expect(body.signUpAndCreateUser.profile_picture).toEqual("");
+
+      expect(body.signUpAndCreateUser.background_picture).toEqual("");
+
+      expect(body.signUpAndCreateUser.online_presence).toEqual("OFFLINE");
+
+      expect(body.signUpAndCreateUser.role).toEqual("USER");
+
+      expect(body.signUpAndCreateUser.groupId).toEqual(null);
     });
   });
 });

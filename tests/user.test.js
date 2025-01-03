@@ -259,5 +259,67 @@ describe("testing user controllers and routes", () => {
 
       expect(body.signUpAndCreateUser.groupId).toEqual(null);
     });
+
+    it("should response with 200 and role by GUEST", async () => {
+      const { status, header, body } = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "preslaw2",
+          last_name: "cvetanow2",
+          username: "preslaw2",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      await prisma.user.update({
+        where: {
+          first_name: "preslaw2",
+        },
+        data: {
+          role: "GUEST",
+        },
+      });
+
+      const findRegisteredUser = await prisma.user.findFirst({
+        where: {
+          first_name: "preslaw2",
+        },
+      });
+
+      expect(status).toBe(200);
+
+      expect(header["content-type"]).toMatch(/json/);
+
+      expect(findRegisteredUser).not.toBeNull();
+
+      expect(body.signUpAndCreateUser.first_name).toEqual("preslaw2");
+
+      expect(body.signUpAndCreateUser.last_name).toEqual("cvetanow2");
+
+      expect(body.signUpAndCreateUser.username).toEqual("preslaw2");
+
+      expect(body.signUpAndCreateUser.password).toEqual(
+        body.signUpAndCreateUser.password
+      );
+
+      expect(body.signUpAndCreateUser.confirm_password).toEqual(
+        body.signUpAndCreateUser.confirm_password
+      );
+
+      expect(body.signUpAndCreateUser.bio).toEqual("");
+
+      expect(body.signUpAndCreateUser.profile_picture).toEqual("");
+
+      expect(body.signUpAndCreateUser.background_picture).toEqual("");
+
+      expect(body.signUpAndCreateUser.online_presence).toEqual("OFFLINE");
+
+      expect(findRegisteredUser.role).toEqual("GUEST");
+
+      expect(body.signUpAndCreateUser.groupId).toEqual(null);
+    });
   });
 });

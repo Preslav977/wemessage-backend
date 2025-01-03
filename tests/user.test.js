@@ -354,6 +354,25 @@ describe("testing user controllers and routes", () => {
     });
   });
 
+  it("should response with 400 if the password conditions are not met", async () => {
+    const { status, body } = await request(app).post("/users/signup").send({
+      first_name: "preslaw3",
+      last_name: "cvetanow3",
+      username: "preslaw3",
+      password: "1234567",
+      confirm_password: "12345678Bg@",
+      bio: "",
+      profile_picture: "",
+      background_picture: "",
+    });
+
+    expect(status).toBe(400);
+
+    expect(body[1].msg).toEqual(
+      "Password must be minimum 8 characters, must have one upper and lower letter, and one special character"
+    );
+  });
+
   it("should respond with a valid session token when successful", async () => {
     const { body } = await request(app).post("/users/login").send({
       username: "preslaw",

@@ -8,9 +8,7 @@ const validateGroup = require("../validateMiddlewares/validateGroup");
 
 const validateMessage = require("../validateMiddlewares/validateMessage");
 
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../db/client");
 
 const upload = require("../middleware/multer");
 

@@ -6,9 +6,7 @@ const asyncHandler = require("express-async-handler");
 
 const validateMessage = require("../validateMiddlewares/validateMessage");
 
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../db/client");
 
 const cloudinary = require("cloudinary").v2;
 

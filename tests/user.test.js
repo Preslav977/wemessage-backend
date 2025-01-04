@@ -14,13 +14,11 @@ const bcrypt = require("bcryptjs");
 
 const userRouter = require("../routes/userRouter");
 
-const { PrismaClient } = require("@prisma/client");
-
-const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
-
 const verifyToken = require("../middleware/verifyToken");
 
 const asyncHandler = require("express-async-handler");
+
+const prisma = require("../db/client");
 
 const jwt = require("jsonwebtoken");
 
@@ -95,7 +93,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  "users/login",
+  "/users/login",
   passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/",
@@ -103,7 +101,7 @@ app.post(
 );
 
 app.get(
-  "users/logout",
+  "/users/logout",
   verifyToken,
   asyncHandler(async (req, res, next) => {
     req.logout((err) => {
@@ -131,24 +129,15 @@ app.get(
 app.use("/users", userRouter);
 
 describe("testing user controllers and routes", (done) => {
-  const databaseUrl =
-    process.env.NODE_ENV === "test"
-      ? process.env.TEST_DATABASE_URL
-      : process.env.DATABASE_URL;
-
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl,
-      },
-    },
-  });
-
   describe("[POST] /users/signup", () => {
-    beforeAll(() => {});
+    beforeAll(async () => {
+      await prisma.$connect();
+    });
 
     afterAll(async () => {
-      await prisma.user.deleteMany();
+      await prisma.$disconnect();
+
+      // await prisma.user.deleteMany();
 
       done;
     });
@@ -388,20 +377,61 @@ describe("testing user controllers and routes", (done) => {
 
       expect(status).toBe(400);
 
-      console.log(body[0].msg);
-
       expect(body[0].msg).toEqual("Passwords must match");
+    });
+
+    describe(`[POST] /users/login`, () => {
+      beforeEach(async () => {
+        // await prisma.user.create({
+        //   data: {
+        //     first_name: "user",
+        //     last_name: "test",
+        //     username: "user",
+        //     password: bcrypt.hashSync("12345678Bg@", 10),
+        //     confirm_password: bcrypt.hashSync("12345678Bg@", 10),
+        //     bio: "",
+        //     profile_picture: "",
+        //     background_picture: "",
+        //   },
+        // });
+        // const { body } = await request(app).post("/users/signup").send({
+        //   first_name: "test",
+        //   last_name: "test",
+        //   username: "test",
+        //   password: "12345678Bg@",
+        //   confirm_password: "12345678Bg",
+        //   bio: "",
+        //   profile_picture: "",
+        //   background_picture: "",
+        // });
+      });
+
+      it("should respond with a valid session token when successful", async () => {
+        const { body } = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "test",
+            last_name: "test",
+            username: "test",
+            password: bcrypt.hashSync("12345678Bg@", 10),
+            confirm_password: bcrypt.hashSync("12345678Bg@", 10),
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
+
+        console.log(body);
+
+        const response = await request(app).post("/users/login").send({
+          username: "test",
+          password: "12345678Bg@",
+        });
+
+        console.log(response.body, response.status);
+
+        // expect(body).toHaveProperty("token");
+        // expect(jwt.verify(body.token, process.env.SECRET) === String);
+      });
     });
   });
 });
-
-// it("should respond with a valid session token when successful", async () => {
-//   const { body } = await request(app).post("/users/login").send({
-//     username: "preslaw",
-//     password: "12345678Bg@",
-//   });
-
-//   expect(body).toHaveProperty("token");
-
-//   expect(jwt.verify(body.token, process.env.SECRET) === String);
-// });

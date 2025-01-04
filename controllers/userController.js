@@ -16,9 +16,7 @@ const validateUserProfile = require("../validateMiddlewares/validateUserProfile"
 
 const validateUserProfilePasswords = require("../validateMiddlewares/validateUserProfilePasswords");
 
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../db/client");
 
 exports.user_sign_up = [
   validateUserRegistration,
@@ -60,6 +58,8 @@ exports.user_log_in = [
   passport.authenticate("local", { session: false }),
   asyncHandler(async (req, res, next) => {
     const { id } = req.user;
+
+    console.log(id);
 
     jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
       res.json({ token });

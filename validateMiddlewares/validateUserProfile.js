@@ -26,6 +26,8 @@ const validateUserProfile = [
 
     if (findIfFirstNameIsTaken) {
       throw new Error(`First name ${takenError}`);
+    } else {
+      //
     }
   }),
 
@@ -44,6 +46,8 @@ const validateUserProfile = [
 
     if (findIfLastNameIsTaken) {
       throw new Error(`Last name ${takenError}`);
+    } else {
+      //
     }
   }),
 
@@ -57,6 +61,8 @@ const validateUserProfile = [
 
       if (findIfUsernameIsTaken) {
         throw new Error(`Username ${takenError}`);
+      } else {
+        //
       }
     })
     .trim()

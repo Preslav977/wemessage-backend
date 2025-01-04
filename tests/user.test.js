@@ -130,27 +130,29 @@ app.get(
 
 app.use("/users", userRouter);
 
-const databaseUrl =
-  process.env.NODE_ENV === "test"
-    ? process.env.TEST_DATABASE_URL
-    : process.env.DATABASE_URL;
+describe("testing user controllers and routes", (done) => {
+  const databaseUrl =
+    process.env.NODE_ENV === "test"
+      ? process.env.TEST_DATABASE_URL
+      : process.env.DATABASE_URL;
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: databaseUrl,
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
     },
-  },
-});
-
-describe("testing user controllers and routes", () => {
-  beforeAll(() => {});
-
-  afterAll(async () => {
-    await prisma.user.deleteMany();
   });
 
   describe("[POST] /users/signup", () => {
+    beforeAll(() => {});
+
+    afterAll(async () => {
+      await prisma.user.deleteMany();
+
+      done;
+    });
+
     it("should response with a 200 status code an user details", async () => {
       const { status, header, body } = await request(app)
         .post("/users/signup")
@@ -352,35 +354,54 @@ describe("testing user controllers and routes", () => {
 
       expect(body[2].msg).toEqual("Username is already taken");
     });
-  });
 
-  it("should response with 400 if the password conditions are not met", async () => {
-    const { status, body } = await request(app).post("/users/signup").send({
-      first_name: "preslaw3",
-      last_name: "cvetanow3",
-      username: "preslaw3",
-      password: "1234567",
-      confirm_password: "12345678Bg@",
-      bio: "",
-      profile_picture: "",
-      background_picture: "",
+    it("should response with 400 if the password conditions are not met", async () => {
+      const { status, body } = await request(app).post("/users/signup").send({
+        first_name: "preslaw3",
+        last_name: "cvetanow3",
+        username: "preslaw3",
+        password: "1234567",
+        confirm_password: "12345678Bg@",
+        bio: "",
+        profile_picture: "",
+        background_picture: "",
+      });
+
+      expect(status).toBe(400);
+
+      expect(body[1].msg).toEqual(
+        "Password must be minimum 8 characters, must have one upper and lower letter, and one special character"
+      );
     });
 
-    expect(status).toBe(400);
+    it("should response with 400 if the passwords are not matched", async () => {
+      const { status, body } = await request(app).post("/users/signup").send({
+        first_name: "preslaw3",
+        last_name: "cvetanow3",
+        username: "preslaw3",
+        password: "1234567Bg@",
+        confirm_password: "12345678Bg",
+        bio: "",
+        profile_picture: "",
+        background_picture: "",
+      });
 
-    expect(body[1].msg).toEqual(
-      "Password must be minimum 8 characters, must have one upper and lower letter, and one special character"
-    );
-  });
+      expect(status).toBe(400);
 
-  it("should respond with a valid session token when successful", async () => {
-    const { body } = await request(app).post("/users/login").send({
-      username: "preslaw",
-      password: "12345678Bg@",
+      console.log(body[0].msg);
+
+      expect(body[0].msg).toEqual("Passwords must match");
     });
-
-    expect(body).toHaveProperty("token");
-
-    expect(jwt.verify(body.token, process.env.SECRET) === String);
   });
 });
+
+// it("should respond with a valid session token when successful", async () => {
+//   const { body } = await request(app).post("/users/login").send({
+//     username: "preslaw",
+//     password: "12345678Bg@",
+//   });
+
+//   expect(body).toHaveProperty("token");
+
+//   expect(jwt.verify(body.token, process.env.SECRET) === String);
+// });

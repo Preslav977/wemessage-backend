@@ -57,7 +57,7 @@ passport.use(
         },
       });
 
-      console.log(user);
+      // console.log(user);
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
@@ -454,6 +454,44 @@ describe("testing user controllers and routes", (done) => {
 
         expect(response.body).toHaveProperty("token");
         expect(jwt.verify(response.body.token, process.env.SECRET) === String);
+      });
+    });
+    describe("[GET] /users", () => {
+      it("should get users details if logged in", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw",
+          password: "12345678Bg@",
+        });
+
+        const getToken = body.token;
+
+        const response = await request(app)
+          .get("/users")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        expect(response.body.first_name).toEqual("preslaw");
+
+        expect(response.body.last_name).toEqual("cvetanow");
+
+        expect(response.body.username).toEqual("preslaw");
+
+        expect(response.body.password).toEqual(response.body.password);
+
+        expect(response.body.confirm_password).toEqual(
+          response.body.confirm_password
+        );
+
+        expect(response.body.bio).toBe("");
+
+        expect(response.body.profile_picture).toBe("");
+
+        expect(response.body.background_picture).toBe("");
+
+        expect(response.body.online_presence).toBe("ONLINE");
+
+        expect(response.body.role).toBe("USER");
+
+        expect(response.body.groupId).toBe(null);
       });
     });
   });

@@ -403,6 +403,26 @@ describe("testing user controllers and routes", (done) => {
         expect(response.body).toHaveProperty("token");
         expect(jwt.verify(response.body.token, process.env.SECRET) === String);
       });
+
+      it("should respond with Unauthorized if role is not an admin", async () => {
+        const { body } = await request(app).post("/users/signup").send({
+          first_name: "test1",
+          last_name: "test1",
+          username: "test1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+        const response = await request(app).post("/users/login_admin").send({
+          username: "test",
+          password: "12345678Bg@",
+        });
+
+        expect(response.body.message).toBe("Unauthorized");
+      });
     });
   });
 });

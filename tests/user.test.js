@@ -423,6 +423,38 @@ describe("testing user controllers and routes", (done) => {
 
         expect(response.body.message).toBe("Unauthorized");
       });
+
+      it("should respond with with 200 when login in guest account", async () => {
+        const { body } = await request(app).post("/users/signup").send({
+          first_name: "test2",
+          last_name: "test2",
+          username: "test2",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+        await prisma.user.update({
+          where: {
+            first_name: "test2",
+          },
+          data: {
+            role: "GUEST",
+          },
+        });
+
+        const response = await request(app).post("/users/login_guest").send({
+          username: "test2",
+          password: "12345678Bg@",
+        });
+
+        expect(response.status).toBe(200);
+
+        expect(response.body).toHaveProperty("token");
+        expect(jwt.verify(response.body.token, process.env.SECRET) === String);
+      });
     });
   });
 });

@@ -6,6 +6,8 @@ const express = require("express");
 
 const LocalStrategy = require("passport-local").Strategy;
 
+const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
+
 const passport = require("passport");
 
 const session = require("express-session");
@@ -32,7 +34,7 @@ app.use(
     secret: process.env.sessionSecret,
     resave: false,
     saveUninitialized: false,
-    store: new PrismaSessionStore(new PrismaClient(), {
+    store: new PrismaSessionStore(prisma, {
       checkPeriod: 2 * 60 * 1000,
       dbRecordIdIsSessionId: true,
       dbRecordIdFunction: undefined,
@@ -93,7 +95,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  "/users/login",
+  "users/login",
   passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/",
@@ -101,7 +103,7 @@ app.post(
 );
 
 app.get(
-  "/users/logout",
+  "users/logout",
   verifyToken,
   asyncHandler(async (req, res, next) => {
     req.logout((err) => {
@@ -137,7 +139,7 @@ describe("testing user controllers and routes", (done) => {
     afterAll(async () => {
       await prisma.$disconnect();
 
-      // await prisma.user.deleteMany();
+      await prisma.user.deleteMany();
 
       done;
     });
@@ -381,56 +383,25 @@ describe("testing user controllers and routes", (done) => {
     });
 
     describe(`[POST] /users/login`, () => {
-      beforeEach(async () => {
-        // await prisma.user.create({
-        //   data: {
-        //     first_name: "user",
-        //     last_name: "test",
-        //     username: "user",
-        //     password: bcrypt.hashSync("12345678Bg@", 10),
-        //     confirm_password: bcrypt.hashSync("12345678Bg@", 10),
-        //     bio: "",
-        //     profile_picture: "",
-        //     background_picture: "",
-        //   },
-        // });
-        // const { body } = await request(app).post("/users/signup").send({
-        //   first_name: "test",
-        //   last_name: "test",
-        //   username: "test",
-        //   password: "12345678Bg@",
-        //   confirm_password: "12345678Bg",
-        //   bio: "",
-        //   profile_picture: "",
-        //   background_picture: "",
-        // });
-      });
-
       it("should respond with a valid session token when successful", async () => {
-        const { body } = await request(app)
-          .post("/users/signup")
-          .send({
-            first_name: "test",
-            last_name: "test",
-            username: "test",
-            password: bcrypt.hashSync("12345678Bg@", 10),
-            confirm_password: bcrypt.hashSync("12345678Bg@", 10),
-            bio: "",
-            profile_picture: "",
-            background_picture: "",
-          });
-
-        console.log(body);
+        const { body } = await request(app).post("/users/signup").send({
+          first_name: "test",
+          last_name: "test",
+          username: "test",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
         const response = await request(app).post("/users/login").send({
           username: "test",
           password: "12345678Bg@",
         });
 
-        console.log(response.body, response.status);
-
-        // expect(body).toHaveProperty("token");
-        // expect(jwt.verify(body.token, process.env.SECRET) === String);
+        expect(response.body).toHaveProperty("token");
+        expect(jwt.verify(response.body.token, process.env.SECRET) === String);
       });
     });
   });

@@ -625,6 +625,40 @@ describe("testing user controllers and routes", (done) => {
           response.body.updateUserBackgroundPicture.background_picture
         ).toBe("123");
       });
+
+      it("should respond with 200 when updating the user passwords", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw-edit",
+          password: "12345678Bg@",
+        });
+
+        const getToken = body.token;
+
+        let response = await request(app)
+          .get("/users")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        // console.log(response.body);
+
+        response = await request(app)
+          .put(`/users/profile/change-passwords/${response.body.id}`)
+          .send({
+            old_password: "12345678Bg@",
+            password: "12345678Bg@123",
+            confirm_password: "12345678Bg@123",
+          })
+          .set("Authorization", `Bearer ${getToken}`);
+
+        expect(response.body.updateUserPasswords.password).toEqual(
+          response.body.updateUserPasswords.password
+        );
+
+        expect(response.body.updateUserPasswords.confirm_password).toEqual(
+          response.body.updateUserPasswords.confirm_password
+        );
+
+        expect(response.status).toBe(200);
+      });
     });
   });
 });

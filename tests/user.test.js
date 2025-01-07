@@ -530,7 +530,7 @@ describe("testing user controllers and routes", (done) => {
           })
           .set("Authorization", `Bearer ${getToken}`);
 
-        console.log(response.body.updateUserProfile);
+        expect(response.status).toBe(200);
 
         expect(response.body.updateUserProfile.first_name).toEqual(
           "preslaw-edit"
@@ -563,6 +563,41 @@ describe("testing user controllers and routes", (done) => {
         expect(response.body.updateUserProfile.role).toBe("USER");
 
         expect(response.body.updateUserProfile.groupId).toBe(null);
+      });
+
+      it("should respond with 400 and when updating the user information", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw-edit",
+          password: "12345678Bg@",
+        });
+
+        const getToken = body.token;
+
+        let response = await request(app)
+          .get("/users")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        response = await request(app)
+          .put(`/users/profile/edit/${response.body.id}`)
+          .send({
+            first_name: "preslaw-edit",
+            last_name: "preslaw-edit",
+            username: "preslaw-edit",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "1",
+            profile_picture: "2",
+            background_picture: "",
+          })
+          .set("Authorization", `Bearer ${getToken}`);
+
+        expect(response.status).toBe(400);
+
+        expect(response.body[0].msg).toEqual("First name is already taken");
+
+        expect(response.body[1].msg).toEqual("Last name is already taken");
+
+        expect(response.body[2].msg).toEqual("Username is already taken");
       });
     });
   });

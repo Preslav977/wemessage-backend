@@ -673,6 +673,38 @@ describe("testing user controllers and routes", (done) => {
 
         expect(response.body.message).toBe("Old password doesn't match.");
       });
+
+      it("should response with 400 when user tries to update passwords, but conditions are not met", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw-edit",
+          password: "12345678Bg@123",
+        });
+
+        const getToken = body.token;
+
+        let response = await request(app)
+          .get("/users")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        response = await request(app)
+          .put(`/users/profile/change-passwords/${response.body.id}`)
+          .send({
+            old_password: "12345678Bg@123",
+            password: "12345678",
+            confirm_password: "12345678Bg@123",
+          })
+          .set("Authorization", `Bearer ${getToken}`);
+
+        // console.log(response.body);
+
+        expect(response.status).toBe(400);
+
+        expect(response.body[0].msg).toEqual(
+          "Password must be minimum 8 characters, must have one upper and lower letter, and one special character"
+        );
+
+        expect(response.body[1].msg).toEqual("Passwords must match");
+      });
     });
   });
 });

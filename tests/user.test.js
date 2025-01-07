@@ -599,6 +599,32 @@ describe("testing user controllers and routes", (done) => {
 
         expect(response.body[2].msg).toEqual("Username is already taken");
       });
+
+      it("should respond with 200 when updating the user background picture", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw-edit",
+          password: "12345678Bg@",
+        });
+
+        const getToken = body.token;
+
+        let response = await request(app)
+          .get("/users")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        response = await request(app)
+          .put(`/users/profile/${response.body.id}`)
+          .send({
+            background_picture: "123",
+          })
+          .set("Authorization", `Bearer ${getToken}`);
+
+        expect(response.status).toBe(200);
+
+        expect(
+          response.body.updateUserBackgroundPicture.background_picture
+        ).toBe("123");
+      });
     });
   });
 });

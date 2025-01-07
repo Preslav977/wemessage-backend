@@ -139,15 +139,7 @@ describe("testing user controllers and routes", (done) => {
     afterAll(async () => {
       await prisma.$disconnect();
 
-      const skipDeletionId = [442];
-
-      await prisma.user.deleteMany({
-        where: {
-          id: {
-            notIn: skipDeletionId,
-          },
-        },
-      });
+      await prisma.user.deleteMany();
 
       done;
     });
@@ -638,8 +630,6 @@ describe("testing user controllers and routes", (done) => {
           .get("/users")
           .set("Authorization", `Bearer ${getToken}`);
 
-        // console.log(response.body);
-
         response = await request(app)
           .put(`/users/profile/change-passwords/${response.body.id}`)
           .send({
@@ -658,6 +648,30 @@ describe("testing user controllers and routes", (done) => {
         );
 
         expect(response.status).toBe(200);
+      });
+
+      it("should respond with message when updating the user passwords", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw-edit",
+          password: "12345678Bg@123",
+        });
+
+        const getToken = body.token;
+
+        let response = await request(app)
+          .get("/users")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        response = await request(app)
+          .put(`/users/profile/change-passwords/${response.body.id}`)
+          .send({
+            old_password: "12345678Bg@12",
+            password: "12345678",
+            confirm_password: "12345678Bg@123",
+          })
+          .set("Authorization", `Bearer ${getToken}`);
+
+        expect(response.body.message).toBe("Old password doesn't match.");
       });
     });
   });

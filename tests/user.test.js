@@ -139,7 +139,15 @@ describe("testing user controllers and routes", (done) => {
     afterAll(async () => {
       await prisma.$disconnect();
 
-      await prisma.user.deleteMany();
+      const skipDeletionId = [442];
+
+      await prisma.user.deleteMany({
+        where: {
+          id: {
+            notIn: skipDeletionId,
+          },
+        },
+      });
 
       done;
     });
@@ -492,6 +500,69 @@ describe("testing user controllers and routes", (done) => {
         expect(response.body.role).toBe("USER");
 
         expect(response.body.groupId).toBe(null);
+      });
+    });
+
+    describe("[PUT] /users/ routes", () => {
+      it("should respond with 200 and update user information", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw",
+          password: "12345678Bg@",
+        });
+
+        const getToken = body.token;
+
+        let response = await request(app)
+          .get("/users")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        response = await request(app)
+          .put(`/users/profile/edit/${response.body.id}`)
+          .send({
+            first_name: "preslaw-edit",
+            last_name: "preslaw-edit",
+            username: "preslaw-edit",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "1",
+            profile_picture: "2",
+            background_picture: "",
+          })
+          .set("Authorization", `Bearer ${getToken}`);
+
+        console.log(response.body.updateUserProfile);
+
+        expect(response.body.updateUserProfile.first_name).toEqual(
+          "preslaw-edit"
+        );
+
+        expect(response.body.updateUserProfile.last_name).toEqual(
+          "preslaw-edit"
+        );
+
+        expect(response.body.updateUserProfile.username).toEqual(
+          "preslaw-edit"
+        );
+
+        expect(response.body.updateUserProfile.password).toEqual(
+          response.body.updateUserProfile.password
+        );
+
+        expect(response.body.updateUserProfile.confirm_password).toEqual(
+          response.body.updateUserProfile.confirm_password
+        );
+
+        expect(response.body.updateUserProfile.bio).toBe("1");
+
+        expect(response.body.updateUserProfile.profile_picture).toBe("2");
+
+        expect(response.body.updateUserProfile.background_picture).toBe("");
+
+        expect(response.body.updateUserProfile.online_presence).toBe("ONLINE");
+
+        expect(response.body.updateUserProfile.role).toBe("USER");
+
+        expect(response.body.updateUserProfile.groupId).toBe(null);
       });
     });
   });

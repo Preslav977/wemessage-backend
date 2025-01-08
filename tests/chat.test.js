@@ -140,49 +140,44 @@ describe("testing chats controllers and routers", (done) => {
   });
 
   describe("[POST] /chats", () => {
-    let getToken;
-
-    let chatId;
-
-    it("should get the token when log in ", async () => {
+    it("should respond with 200 if chat is started between 2 users", async () => {
       app.use("/users", userRouter);
 
-      const { body } = await request(app).post("/users/login").send({
+      const response = await request(app).post("/users/login").send({
         username: "preslaw123",
         password: "12345678Bg@",
       });
 
-      getToken = body.token;
-
-      const response = await request(app)
-        .get("/users")
-        .set("Authorization", `Bearer ${getToken}`);
-    });
-
-    it("should respond with 200 if chat is started between 2 users", async () => {
-      app.use("/chats", chatRouter);
+      const token = response.body.token;
 
       const { body, status } = await request(app)
         .post("/chats")
         .send({ id: 863, id: 864 })
-        .set("Authorization", `Bearer ${getToken}`);
-
-      chatId = body.createChat.id;
-
+        .set("Authorization", `Bearer ${token}`);
       expect(status).toBe(200);
-
       expect(body.createChat.id).toBe(body.createChat.id);
-
       expect(body.createChat.groupId).toBe(null);
     });
 
     it("should respond with 200 when user sends a message", async () => {
-      const response = await request(app)
-        .get(`/chats/${chatId}`)
-        .set("Authorization", `Bearer ${getToken}`);
+      app.use("/users", userRouter);
+
+      let response = await request(app).post("/users/login").send({
+        username: "preslaw123",
+        password: "12345678Bg@",
+      });
+
+      const token = response.body.token;
+
+      app.use("/chats", chatRouter);
 
       const { body } = await request(app)
-        .post(`/chats/${chatId}/message`)
+        .post("/chats")
+        .send({ id: 863, id: 864 })
+        .set("Authorization", `Bearer ${token}`);
+
+      response = await request(app)
+        .post(`/chats/${body.createChat.id}/message`)
         .send({
           message_text: "hello",
           message_imageName: "",
@@ -191,26 +186,66 @@ describe("testing chats controllers and routers", (done) => {
           message_imageSize: 0,
           createdAt: new Date(),
           userId: 863,
-          chatId: `${chatId}`,
+          chatId: `${body.createChat.id}`,
         })
-        .set("Authorization", `Bearer ${getToken}`);
+        .set("Authorization", `Bearer ${token}`);
 
-      expect(body.sendMessageInChat.message_text).toBe("hello");
+      expect(response.body.sendMessageInChat.message_text).toBe("hello");
 
-      expect(body.sendMessageInChat.message_imageName).toBe("");
+      expect(response.body.sendMessageInChat.message_imageName).toBe("");
 
-      expect(body.sendMessageInChat.message_imageURL).toBe("");
+      expect(response.body.sendMessageInChat.message_imageURL).toBe("");
 
-      expect(body.sendMessageInChat.message_imageType).toBe("");
+      expect(response.body.sendMessageInChat.message_imageType).toBe("");
 
-      expect(body.sendMessageInChat.message_imageSize).toBe(0);
+      expect(response.body.sendMessageInChat.message_imageSize).toBe(0);
 
-      expect(body.sendMessageInChat.createdAt).toBe(
-        body.sendMessageInChat.createdAt
+      expect(response.body.sendMessageInChat.createdAt).toBe(
+        response.body.sendMessageInChat.createdAt
       );
-      expect(body.sendMessageInChat.userId).toBe(863);
+      expect(response.body.sendMessageInChat.userId).toBe(863);
 
-      expect(body.sendMessageInChat.chatId).toBe(body.sendMessageInChat.chatId);
+      expect(response.body.sendMessageInChat.chatId).toBe(
+        response.body.sendMessageInChat.chatId
+      );
+    });
+
+    it("should response with 200 when user sends a image in chat", async () => {
+      app.use("/users", userRouter);
+
+      const buffer = Buffer.from("test");
+
+      console.log(buffer);
+
+      let response = await request(app).post("/users/login").send({
+        username: "preslaw123",
+        password: "12345678Bg@",
+      });
+
+      const token = response.body.token;
+
+      app.use("/chats", chatRouter);
+
+      response = await request(app)
+        .post("/chats")
+        .send({ id: 863, id: 864 })
+        .set("Authorization", `Bearer ${token}`);
+
+      const { body } = await request(app)
+        .post(`/chats/${response.body.createChat.id}/image`)
+        .send({
+          message_text: "",
+          message_imageName: "file",
+          message_imageURL: "http://image.com",
+          message_imageType: "image/png",
+          message_imageSize: buffer,
+          createdAt: new Date(),
+          userId: 863,
+          chatId: `${response.body.createChat.id}`,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      console.log(body);
     });
   });
 });

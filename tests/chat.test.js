@@ -1,53 +1,30 @@
 require("dotenv").config();
 
+const request = require("supertest");
+
 const express = require("express");
 
-const path = require("node:path");
+const chatRouter = require("../routes/chatRouter");
 
-const session = require("express-session");
+const userRouter = require("../routes/userRouter");
 
-const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
-
-const prisma = require("./db/client");
-
-const passport = require("passport");
+const prisma = require("../db/client");
 
 const LocalStrategy = require("passport-local").Strategy;
 
-const bcrypt = require("bcryptjs");
+const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
 
-const cloudinary = require("cloudinary").v2;
+const passport = require("passport");
 
-const indexRouter = require("./routes/indexRouter");
+const session = require("express-session");
 
-const userRouter = require("./routes/userRouter");
-
-const chatRouter = require("./routes/chatRouter");
-
-const groupRouter = require("./routes/groupRouter");
+const verifyToken = require("../middleware/verifyToken");
 
 const asyncHandler = require("express-async-handler");
 
-const verifyToken = require("./middleware/verifyToken");
+const bcrypt = require("bcryptjs");
 
 const app = express();
-
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
-
-const assetsPath = path.join(__dirname + "/public");
-
-app.use(express.static(assetsPath));
-
-app.use(express.json());
-
-app.use(express.urlencoded({ extended: true }));
-
-cloudinary.config({
-  cloud_name: process.env.cloud_name,
-  api_key: process.env.api_key,
-  api_secret: process.env.api_secret,
-});
 
 app.use(
   session({
@@ -67,6 +44,10 @@ app.use(
 
 app.use(passport.session());
 
+app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
 passport.use(
   new LocalStrategy(async (username, password, done) => {
     try {
@@ -76,7 +57,7 @@ passport.use(
         },
       });
 
-      // console.log(user);
+      console.log(user);
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
@@ -114,7 +95,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  "user/login",
+  "users/login",
   passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/",
@@ -122,14 +103,14 @@ app.post(
 );
 
 app.get(
-  "/user/logout",
+  "users/logout",
   verifyToken,
   asyncHandler(async (req, res, next) => {
     req.logout((err) => {
       if (err) {
         return next(err);
       }
-      res.redirect("/user/login");
+      res.redirect("user/login");
     });
 
     await prisma.user.update({
@@ -143,21 +124,54 @@ app.get(
   })
 );
 
-// app.use("/", indexRouter);
-
-app.use("/users", userRouter);
-
 app.use("/chats", chatRouter);
 
-app.use("/groups", groupRouter);
+describe("testing chats controllers and routers", (done) => {
+  beforeAll(async () => {
+    await prisma.$connect();
+  });
 
-app.use((err, req, res, next) => {
-  res.status(err.status || 500);
-  console.error(err);
+  afterAll(async () => {
+    await prisma.$disconnect();
+
+    // await prisma.user.deleteMany();
+
+    done;
+  });
+
+  describe("[POST] /chats", () => {
+    it("should respond with 200 if chat is started between 2 users", async () => {
+      app.use("/users", userRouter);
+
+      const { body } = await request(app).post("/users/login").send({
+        username: "preslaw123",
+        password: "12345678Bg@",
+      });
+
+      // console.log(body);
+
+      const getToken = body.token;
+
+      let response = await request(app)
+        .get("/users")
+        .set("Authorization", `Bearer ${getToken}`);
+
+      // console.log(response.body);
+
+      app.use("/chats", chatRouter);
+
+      response = await request(app)
+        .post("/chats")
+        .send({ id: 863, id: 864 })
+        .set("Authorization", `Bearer ${getToken}`);
+
+      // console.log(response.body);
+
+      expect(response.status).toBe(200);
+
+      expect(response.body.createChat.id).toBe(response.body.createChat.id);
+
+      expect(response.body.createChat.groupId).toBe(null);
+    });
+  });
 });
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => console.log(`Express app - listening on port ${PORT}!`));
-
-module.exports = app;

@@ -131,19 +131,19 @@ app.get(
 app.use("/users", userRouter);
 
 describe("testing user controllers and routes", (done) => {
+  beforeAll(async () => {
+    await prisma.$connect();
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+
+    await prisma.user.deleteMany();
+
+    done;
+  });
+
   describe("[POST] /users/signup", () => {
-    beforeAll(async () => {
-      await prisma.$connect();
-    });
-
-    afterAll(async () => {
-      await prisma.$disconnect();
-
-      await prisma.user.deleteMany();
-
-      done;
-    });
-
     it("should response with a 200 status code an user details", async () => {
       const { status, header, body } = await request(app)
         .post("/users/signup")
@@ -159,6 +159,8 @@ describe("testing user controllers and routes", (done) => {
         });
 
       const findRegisteredUser = await prisma.user.findFirst();
+
+      console.log(findRegisteredUser);
 
       expect(status).toBe(200);
 
@@ -695,8 +697,6 @@ describe("testing user controllers and routes", (done) => {
           })
           .set("Authorization", `Bearer ${getToken}`);
 
-        // console.log(response.body);
-
         expect(response.status).toBe(400);
 
         expect(response.body[0].msg).toEqual(
@@ -704,6 +704,45 @@ describe("testing user controllers and routes", (done) => {
         );
 
         expect(response.body[1].msg).toEqual("Passwords must match");
+      });
+
+      it("should return user when searching", async () => {
+        const { body } = await request(app).post("/users/login").send({
+          username: "preslaw-edit",
+          password: "12345678Bg@123",
+        });
+
+        const getToken = body.token;
+
+        let response = await request(app)
+          .get("/users/search?first_name=preslaw1&last_name=c")
+          .set("Authorization", `Bearer ${getToken}`);
+
+        expect(response.body.searchForUser[0].first_name).toBe("preslaw1");
+
+        expect(response.body.searchForUser[0].last_name).toBe("cvetanow1");
+
+        expect(response.body.searchForUser[0].username).toBe("preslaw1");
+
+        expect(response.body.searchForUser[0].password).toBe(
+          response.body.searchForUser[0].password
+        );
+
+        expect(response.body.searchForUser[0].confirm_password).toBe(
+          response.body.searchForUser[0].confirm_password
+        );
+
+        expect(response.body.searchForUser[0].bio).toBe("");
+
+        expect(response.body.searchForUser[0].profile_picture).toBe("");
+
+        expect(response.body.searchForUser[0].background_picture).toBe("");
+
+        expect(response.body.searchForUser[0].role).toBe("ADMIN");
+
+        expect(response.body.searchForUser[0].groupId).toBe(null);
+
+        expect(response.body.searchForUser[0].online_presence).toBe("OFFLINE");
       });
     });
   });

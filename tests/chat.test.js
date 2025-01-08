@@ -134,13 +134,17 @@ describe("testing chats controllers and routers", (done) => {
   afterAll(async () => {
     await prisma.$disconnect();
 
-    // await prisma.chat.deleteMany();
+    await prisma.chat.deleteMany();
 
     done;
   });
 
   describe("[POST] /chats", () => {
-    it("should respond with 200 if chat is started between 2 users", async () => {
+    let getToken;
+
+    let chatId;
+
+    it("should get the token when log in ", async () => {
       app.use("/users", userRouter);
 
       const { body } = await request(app).post("/users/login").send({
@@ -148,44 +152,37 @@ describe("testing chats controllers and routers", (done) => {
         password: "12345678Bg@",
       });
 
-      const getToken = body.token;
+      getToken = body.token;
 
-      let response = await request(app)
+      const response = await request(app)
         .get("/users")
         .set("Authorization", `Bearer ${getToken}`);
+    });
 
+    it("should respond with 200 if chat is started between 2 users", async () => {
       app.use("/chats", chatRouter);
 
-      response = await request(app)
+      const { body, status } = await request(app)
         .post("/chats")
         .send({ id: 863, id: 864 })
         .set("Authorization", `Bearer ${getToken}`);
 
-      expect(response.status).toBe(200);
+      chatId = body.createChat.id;
 
-      expect(response.body.createChat.id).toBe(response.body.createChat.id);
+      expect(status).toBe(200);
 
-      expect(response.body.createChat.groupId).toBe(null);
+      expect(body.createChat.id).toBe(body.createChat.id);
+
+      expect(body.createChat.groupId).toBe(null);
     });
 
     it("should respond with 200 when user sends a message", async () => {
-      app.use("/users", userRouter);
-
-      const { body } = await request(app).post("/users/login").send({
-        username: "preslaw123",
-        password: "12345678Bg@",
-      });
-
-      const getToken = body.token;
-
-      let response = await request(app)
-        .get("/users")
+      const response = await request(app)
+        .get(`/chats/${chatId}`)
         .set("Authorization", `Bearer ${getToken}`);
 
-      app.use("/chats", chatRouter);
-
-      response = await request(app)
-        .post("/chats/ecaf4073-40d3-4f03-89fd-f56706d3bfba/message")
+      const { body } = await request(app)
+        .post(`/chats/${chatId}/message`)
         .send({
           message_text: "hello",
           message_imageName: "",
@@ -194,31 +191,26 @@ describe("testing chats controllers and routers", (done) => {
           message_imageSize: 0,
           createdAt: new Date(),
           userId: 863,
-          chatId: "ecaf4073-40d3-4f03-89fd-f56706d3bfba",
+          chatId: `${chatId}`,
         })
         .set("Authorization", `Bearer ${getToken}`);
 
-      console.log(response);
+      expect(body.sendMessageInChat.message_text).toBe("hello");
 
-      expect(response.body.sendMessageInChat.message_text).toBe("hello");
+      expect(body.sendMessageInChat.message_imageName).toBe("");
 
-      expect(response.body.sendMessageInChat.message_imageName).toBe("");
+      expect(body.sendMessageInChat.message_imageURL).toBe("");
 
-      expect(response.body.sendMessageInChat.message_imageURL).toBe("");
+      expect(body.sendMessageInChat.message_imageType).toBe("");
 
-      expect(response.body.sendMessageInChat.message_imageType).toBe("");
+      expect(body.sendMessageInChat.message_imageSize).toBe(0);
 
-      expect(response.body.sendMessageInChat.message_imageSize).toBe(0);
-
-      expect(response.body.sendMessageInChat.createdAt).toBe(
-        response.body.sendMessageInChat.createdAt
+      expect(body.sendMessageInChat.createdAt).toBe(
+        body.sendMessageInChat.createdAt
       );
+      expect(body.sendMessageInChat.userId).toBe(863);
 
-      expect(response.body.sendMessageInChat.userId).toBe(863);
-
-      expect(response.body.sendMessageInChat.chatId).toBe(
-        response.body.sendMessageInChat.chatId
-      );
+      expect(body.sendMessageInChat.chatId).toBe(body.sendMessageInChat.chatId);
     });
   });
 });

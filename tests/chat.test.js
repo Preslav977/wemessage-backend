@@ -293,11 +293,36 @@ describe("testing chats controllers and routers", (done) => {
 
         .attach("file", "public/Teruel.jpg");
 
-      console.log(body);
-
       expect(body[0].msg).toBe("Image size exceed 5 MB");
 
       expect(status).toBe(400);
     }, 10000);
+
+    it("should respond with message if you dont upload an image", async () => {
+      app.use("/users", userRouter);
+
+      let response = await request(app).post("/users/login").send({
+        username: "preslaw123",
+        password: "12345678Bg@",
+      });
+
+      const token = response.body.token;
+
+      app.use("/chats", chatRouter);
+
+      response = await request(app)
+        .post("/chats")
+        .send({ id: 863, id: 864 })
+        .set("Authorization", `Bearer ${token}`);
+
+      const { body, status } = await request(app)
+        .post(`/chats/${response.body.createChat.id}/image`)
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .attach("file", "public/Plain Text.txt");
+
+      expect(body).toEqual("An unknown file format not allowed");
+    });
   });
 });

@@ -84,18 +84,12 @@ exports.chat_send_image = [
 
       const b64 = Buffer.from(req.file.buffer).toString("base64");
 
-      console.log(b64);
-
       const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-
-      console.log(dataURI);
 
       cloudinaryResponse = await handleFileUpload(
         dataURI,
         req.file.originalname
       );
-
-      console.log(cloudinaryResponse);
 
       next();
     } catch (error) {

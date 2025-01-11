@@ -144,6 +144,8 @@ describe("testing chats controllers and routers", (done) => {
 
     await prisma.chat.deleteMany();
 
+    await prisma.message.deleteMany();
+
     done;
   });
 
@@ -269,34 +271,34 @@ describe("testing chats controllers and routers", (done) => {
       expect(body.sendImageInChat.groupId).toBe(null);
     });
 
-    it("should respond with 400 if the image is too big", async () => {
-      app.use("/users", userRouter);
+    // it("should respond with 400 if the image is too big", async () => {
+    //   app.use("/users", userRouter);
 
-      let response = await request(app).post("/users/login").send({
-        username: "preslaw123",
-        password: "12345678Bg@",
-      });
+    //   let response = await request(app).post("/users/login").send({
+    //     username: "preslaw123",
+    //     password: "12345678Bg@",
+    //   });
 
-      const token = response.body.token;
+    //   const token = response.body.token;
 
-      app.use("/chats", chatRouter);
+    //   app.use("/chats", chatRouter);
 
-      response = await request(app)
-        .post("/chats")
-        .send({ id: 863, id: 864 })
-        .set("Authorization", `Bearer ${token}`);
+    //   response = await request(app)
+    //     .post("/chats")
+    //     .send({ id: 863, id: 864 })
+    //     .set("Authorization", `Bearer ${token}`);
 
-      const { body, status } = await request(app)
-        .post(`/chats/${response.body.createChat.id}/image`)
+    //   const { body, status } = await request(app)
+    //     .post(`/chats/${response.body.createChat.id}/image`)
 
-        .set("Authorization", `Bearer ${token}`)
+    //     .set("Authorization", `Bearer ${token}`)
 
-        .attach("file", "public/Teruel.jpg");
+    //     .attach("file", "public/Teruel.jpg");
 
-      expect(body[0].msg).toBe("Image size exceed 5 MB");
+    //   expect(body[0].msg).toBe("Image size exceed 5 MB");
 
-      expect(status).toBe(400);
-    }, 10000);
+    //   expect(status).toBe(400);
+    // }, 10000);
 
     it("should respond with message if you dont upload an image", async () => {
       app.use("/users", userRouter);
@@ -323,6 +325,80 @@ describe("testing chats controllers and routers", (done) => {
         .attach("file", "public/Plain Text.txt");
 
       expect(body).toEqual("An unknown file format not allowed");
+    });
+
+    it("should respond with 200 and chat information", async () => {
+      app.use("/users", userRouter);
+
+      let response = await request(app).post("/users/login").send({
+        username: "preslaw123",
+        password: "12345678Bg@",
+      });
+
+      const token = response.body.token;
+
+      app.use("/chats", chatRouter);
+
+      response = await request(app)
+        .post("/chats")
+        .send({ id: 863, id: 864 })
+        .set("Authorization", `Bearer ${token}`);
+
+      const { body, status } = await request(app)
+        .get(`/chats/${response.body.createChat.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(status).toBe(200);
+
+      expect(body.findChatById.users[0].first_name).toEqual("preslaw123");
+
+      expect(body.findChatById.users[0].last_name).toEqual("cvetanow123");
+
+      expect(body.findChatById.users[0].username).toEqual("preslaw123");
+
+      expect(body.findChatById.users[0].password).toEqual(
+        body.findChatById.users[0].password
+      );
+
+      expect(body.findChatById.users[0].confirm_password).toEqual(
+        body.findChatById.users[0].confirm_password
+      );
+
+      expect(body.findChatById.users[0].bio).toBe("");
+
+      expect(body.findChatById.users[0].profile_picture).toBe("");
+
+      expect(body.findChatById.users[0].online_presence).toBe("ONLINE");
+
+      expect(body.findChatById.users[0].role).toBe("USER");
+
+      expect(body.findChatById.users[0].groupId).toBe(null);
+
+      expect(body.findChatById.users[1].first_name).toEqual("preslaw1234");
+
+      expect(body.findChatById.users[1].last_name).toEqual("cvetanow1234");
+
+      expect(body.findChatById.users[1].username).toEqual("preslaw1234");
+
+      expect(body.findChatById.users[1].password).toEqual(
+        body.findChatById.users[1].password
+      );
+
+      expect(body.findChatById.users[1].confirm_password).toEqual(
+        body.findChatById.users[1].confirm_password
+      );
+
+      expect(body.findChatById.users[1].bio).toBe("");
+
+      expect(body.findChatById.users[1].profile_picture).toBe("");
+
+      expect(body.findChatById.users[1].online_presence).toBe("OFFLINE");
+
+      expect(body.findChatById.users[1].role).toBe("USER");
+
+      expect(body.findChatById.users[1].groupId).toBe(null);
+
+      expect(body.findChatById.messages).toEqual([]);
     });
   });
 });

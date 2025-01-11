@@ -10,16 +10,17 @@ const validateImage = [
   check("file").custom(async (value, { req }) => {
     const uploadedImageSize = req.file.size;
 
-    console.log(uploadedImageSize);
+    // console.log(uploadedImageSize);
 
     if (uploadedImageSize > 5000000) {
       const deleteUploadedImage = await cloudinary.uploader.destroy(
         `wemessage_images/${req.file.originalname}`
       );
 
-      console.log(deleteUploadedImage);
+      // console.log(deleteUploadedImage);
 
       throw new Error(`${imageSizeExceedLimit}`);
+      // res.json({ error: `${imageSizeExceedLimit}` });
     }
   }),
 ];

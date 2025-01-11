@@ -400,5 +400,63 @@ describe("testing chats controllers and routers", (done) => {
 
       expect(body.findChatById.messages).toEqual([]);
     });
+
+    it("should respond with 200 when getting all chats information", async () => {
+      app.use("/users", userRouter);
+
+      let response = await request(app).post("/users/login").send({
+        username: "preslaw123",
+        password: "12345678Bg@",
+      });
+
+      const token = response.body.token;
+
+      app.use("/chats", chatRouter);
+
+      response = await request(app)
+        .post("/chats")
+        .send({ id: 863, id: 864 })
+        .set("Authorization", `Bearer ${token}`);
+
+      const { body, status } = await request(app)
+        .get(`/chats/`)
+        .set("Authorization", `Bearer ${token}`);
+
+      body.getChats.map((chats) => {
+        expect(chats.id).toEqual(chats.id);
+
+        expect(chats.groupId).toEqual(null);
+
+        expect(chats.users[0].first_name).toEqual(chats.users[0].first_name);
+
+        expect(chats.users[0].last_name).toEqual(chats.users[0].last_name);
+
+        expect(chats.users[0].username).toEqual(chats.users[0].username);
+
+        expect(chats.users[0].password).toEqual(chats.users[0].password);
+
+        expect(chats.users[0].confirm_password).toEqual(
+          chats.users[0].confirm_password
+        );
+
+        expect(chats.users[0].bio).toEqual(chats.users[0].bio);
+
+        expect(chats.users[0].profile_picture).toEqual(
+          chats.users[0].profile_picture
+        );
+
+        expect(chats.users[0].background_picture).toEqual(
+          chats.users[0].background_picture
+        );
+
+        expect(chats.users[0].online_presence).toEqual(
+          chats.users[0].online_presence
+        );
+
+        expect(chats.users[0].role).toEqual(chats.users[0].role);
+
+        expect(chats.users[0].groupId).toEqual(chats.users[0].groupId);
+      });
+    });
   });
 });

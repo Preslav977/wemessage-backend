@@ -165,7 +165,11 @@ exports.chat_edit_message = [
 
     const { id, messageId } = req.params;
 
+    // console.log(id, messageId);
+
     const { message_text } = req.body;
+
+    // console.log(message_text);
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -173,7 +177,7 @@ exports.chat_edit_message = [
       const editMessageInChat = await prisma.message.update({
         where: {
           id: Number(messageId),
-          chat: id,
+          chatId: id,
         },
         data: {
           message_text: message_text,

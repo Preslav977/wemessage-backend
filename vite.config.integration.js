@@ -5,6 +5,7 @@ export default defineConfig({
     include: ["tests/**/*.test.js", "!/tests"],
     threads: false,
     setupFiles: ["/tests/helpers/setup.js"],
+    globalSetup: true,
   },
   resolve: {
     alias: {},

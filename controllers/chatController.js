@@ -203,13 +203,15 @@ exports.chat_delete_message = [
       },
     });
 
-    if (deleteMessageInChat.message_imageURL !== "") {
-      const deleteImageFromCloudinary = await cloudinary.uploader.destroy(
-        `wemessage_images/${deleteMessageInChat.message_imageName}`
-      );
+    console.log(deleteMessageInChat);
 
-      console.log(deleteImageFromCloudinary);
-    }
+    // if (deleteMessageInChat.message_imageURL !== "") {
+    //   const deleteImageFromCloudinary = await cloudinary.uploader.destroy(
+    //     `wemessage_images/${deleteMessageInChat.message_imageName}`
+    //   );
+
+    //   // console.log(deleteImageFromCloudinary);
+    // }
 
     res.json({ message: "Message has been deleted." });
   }),

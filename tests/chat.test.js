@@ -496,13 +496,15 @@ describe("testing chats controllers and routers", (done) => {
 
         const messageId = response.body.sendMessageInChat.id;
 
-        const { body } = await request(app)
+        const { body, status } = await request(app)
           .put(`/chats/${conversationId}/message/${messageId}`)
           .send({
             message_text: "bye, people",
             updateAt: new Date(),
           })
           .set("Authorization", `Bearer ${token}`);
+
+        expect(status).toBe(200);
 
         expect(body.editMessageInChat.message_text).toEqual("bye, people");
 
@@ -531,6 +533,51 @@ describe("testing chats controllers and routers", (done) => {
         );
 
         expect(body.editMessageInChat.groupId).toBe(null);
+      });
+    });
+    describe("[DELETE] /chats", () => {
+      it("should respond with message if message is being deleted", async () => {
+        app.use("/users", userRouter);
+
+        const logInUser = await request(app).post("/users/login").send({
+          username: "preslaw123",
+          password: "12345678Bg@",
+        });
+
+        const token = logInUser.body.token;
+
+        app.use("/chats", chatRouter);
+
+        const startConversation = await request(app)
+          .post("/chats")
+          .send({ id: 863, id: 864 })
+          .set("Authorization", `Bearer ${token}`);
+
+        const sendMessage = await request(app)
+          .post(`/chats/${startConversation.body.createChat.id}/message`)
+          .send({
+            message_text: "helloooo",
+            message_imageName: "",
+            message_imageURL: "",
+            message_imageType: "",
+            message_imageSize: 0,
+            createdAt: new Date(),
+            userId: 863,
+            chatId: `${startConversation.body.createChat.id}`,
+          })
+          .set("Authorization", `Bearer ${token}`);
+
+        const conversationId = startConversation.body.createChat.id;
+
+        const messageId = sendMessage.body.sendMessageInChat.id;
+
+        const { body, status } = await request(app)
+          .delete(`/chats/${conversationId}/message/${messageId}`)
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(body.message).toEqual("Message has been deleted.");
+
+        expect(status).toBe(200);
       });
     });
   });

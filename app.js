@@ -156,8 +156,4 @@ app.use((err, req, res, next) => {
   console.error(err);
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => console.log(`Express app - listening on port ${PORT}!`));
-
 module.exports = app;

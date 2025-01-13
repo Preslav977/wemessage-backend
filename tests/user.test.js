@@ -2,8 +2,6 @@ require("dotenv").config();
 
 const request = require("supertest");
 
-const express = require("express");
-
 const prisma = require("../db/client");
 
 const jwt = require("jsonwebtoken");

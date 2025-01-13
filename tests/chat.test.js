@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const request = require("supertest");
 
 const chatRouter = require("../routes/chatRouter");
@@ -12,7 +10,7 @@ const app = require("../app");
 
 app.use("/", chatRouter);
 
-describe("testing chats controllers and routers", (done) => {
+describe("testing chats controllers and routes", (done) => {
   beforeAll(async () => {
     await prisma.$connect();
   });

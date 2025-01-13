@@ -53,11 +53,11 @@ describe("testing groups controllers and routes", (done) => {
   afterAll(async () => {
     await prisma.$disconnect();
 
-    await prisma.group.deleteMany();
-
     await prisma.user.deleteMany();
 
     await prisma.chat.deleteMany();
+
+    await prisma.group.deleteMany();
 
     done;
   });
@@ -96,6 +96,45 @@ describe("testing groups controllers and routes", (done) => {
       expect(body.createGroupChat.id).toEqual(body.createGroupChat.id);
 
       expect(body.createGroupChat.groupId).toBe(null);
+    });
+
+    it("should respond with 400 when group already exists", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const { body, header, status } = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "group",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const findGroup = await prisma.group.findUnique({
+        where: {
+          group_name: "group",
+        },
+      });
+
+      expect(status).toBe(400);
+
+      expect(header["content-type"]).toMatch(/json/);
+
+      expect(findGroup).not.toBeNull();
+
+      expect(body[0].msg).toEqual("Group name is already taken");
     });
   });
 });

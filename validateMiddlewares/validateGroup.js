@@ -4,9 +4,7 @@ const groupLengthErr = "must be between 3 and 30 characters";
 
 const groupTakenError = "is already taken";
 
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../db/client");
 
 const validateGroup = [
   body("group_name")
@@ -24,6 +22,8 @@ const validateGroup = [
 
     if (findIfGroupNameExists) {
       throw new Error(`Group name ${groupTakenError}`);
+    } else {
+      //
     }
   }),
 ];

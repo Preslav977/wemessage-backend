@@ -6,9 +6,7 @@ const takenError = "is already taken";
 
 const bioLengthErr = "must not be more than 150 characters";
 
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../db/client");
 
 const validateUserProfile = [
   body("first_name")

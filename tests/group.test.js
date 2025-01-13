@@ -311,5 +311,81 @@ describe("testing groups controllers and routes", (done) => {
 
       expect(body.sendImageInGroup.groupId).toBe(body.sendImageInGroup.groupId);
     });
+
+    it("should respond with 400 if image is too big", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "new group",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const { body, header, status } = await request(app)
+        .post(`/groups/${groupId}/image/${chatId}`)
+
+        .attach("file", "public/Teruel.jpg")
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(body[0].msg).toBe("Image size exceed 5 MB");
+
+      expect(header["content-type"]).toMatch(/json/);
+
+      expect(status).toBe(400);
+    }, 10000);
+
+    it("should respond with message if you dont upload an image", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "new group123",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const { body } = await request(app)
+        .post(`/groups/${groupId}/image/${chatId}`)
+
+        .attach("file", "public/Plain Text.txt")
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(body).toEqual("An unknown file format not allowed");
+    });
   });
 });

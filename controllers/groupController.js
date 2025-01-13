@@ -85,7 +85,7 @@ exports.group_send_message = [
           message_imageName: "",
           message_imageURL: "",
           message_imageType: "",
-          message_imageSize: "",
+          message_imageSize: 0,
           createdAt: new Date(),
           userId: req.authData.id,
           chatId: findRelatedChatToGroup.id,

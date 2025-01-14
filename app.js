@@ -18,7 +18,7 @@ const bcrypt = require("bcryptjs");
 
 const cloudinary = require("cloudinary").v2;
 
-const indexRouter = require("./routes/indexRouter");
+const cors = require("cors");
 
 const userRouter = require("./routes/userRouter");
 
@@ -42,6 +42,8 @@ app.use(express.static(assetsPath));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use(cors());
 
 cloudinary.config({
   cloud_name: process.env.cloud_name,

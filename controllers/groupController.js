@@ -20,8 +20,6 @@ const runMiddleware = require("../middleware/runMiddleware");
 
 const multerFileUploadMiddleware = upload.single("file");
 
-const formatImageSize = require("../middleware/formatImageSize");
-
 const validateImage = require("../validateMiddlewares/validateImage");
 
 exports.group_create = [
@@ -43,8 +41,6 @@ exports.group_create = [
         },
       });
 
-      // console.log(createGroupChat);
-
       const createGroup = await prisma.group.create({
         data: {
           group_name: group_name,
@@ -56,8 +52,6 @@ exports.group_create = [
           },
         },
       });
-
-      // console.log(createGroup);
 
       res.json({ createGroupChat, createGroup });
     }
@@ -82,8 +76,6 @@ exports.group_send_message = [
           id: chatId,
         },
       });
-
-      // console.log(findRelatedChatToGroup);
 
       const sendMessageInGroup = await prisma.message.create({
         data: {
@@ -239,8 +231,6 @@ exports.group_edit_message = [
         },
       });
 
-      // console.log(req.authData.id, findByGroupId.chats[0].id, id);
-
       const editMessageInGroup = await prisma.message.update({
         where: {
           id: Number(messageId),
@@ -287,7 +277,7 @@ exports.group_delete_message = [
         `wemessage_images/${deleteMessageInGroup.message_imageName}`
       );
 
-      console.log(deleteImageFromCloudinary);
+      // console.log(deleteImageFromCloudinary);
     }
 
     res.json({ message: "Message has been deleted." });

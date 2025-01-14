@@ -8,8 +8,6 @@ const validateMessage = require("../validateMiddlewares/validateMessage");
 
 const prisma = require("../db/client");
 
-const cloudinary = require("cloudinary").v2;
-
 const upload = require("../middleware/multer");
 
 const handleFileUpload = require("../middleware/handleFileUpload");
@@ -17,8 +15,6 @@ const handleFileUpload = require("../middleware/handleFileUpload");
 const runMiddleware = require("../middleware/runMiddleware");
 
 const multerFileUploadMiddleware = upload.single("file");
-
-const formatImageSize = require("../middleware/formatImageSize");
 
 const validateImage = require("../validateMiddlewares/validateImage");
 
@@ -65,8 +61,6 @@ exports.chat_send_message = [
         },
       });
 
-      console.log(sendMessageInChat);
-
       res.json({ sendMessageInChat });
     }
   }),
@@ -78,7 +72,6 @@ exports.chat_send_image = [
   verifyToken,
 
   asyncHandler(async (req, res, next) => {
-    // console.log(req.file.buffer);
     try {
       await runMiddleware(req, res, multerFileUploadMiddleware);
 
@@ -118,7 +111,6 @@ exports.chat_send_image = [
           chatId: id,
         },
       });
-      console.log(sendImageInChat);
 
       res.send({ sendImageInChat });
     }
@@ -165,11 +157,7 @@ exports.chat_edit_message = [
 
     const { id, messageId } = req.params;
 
-    // console.log(id, messageId);
-
     const { message_text } = req.body;
-
-    // console.log(message_text);
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -203,15 +191,13 @@ exports.chat_delete_message = [
       },
     });
 
-    console.log(deleteMessageInChat);
+    if (deleteMessageInChat.message_imageURL !== "") {
+      const deleteImageFromCloudinary = await cloudinary.uploader.destroy(
+        `wemessage_images/${deleteMessageInChat.message_imageName}`
+      );
 
-    // if (deleteMessageInChat.message_imageURL !== "") {
-    //   const deleteImageFromCloudinary = await cloudinary.uploader.destroy(
-    //     `wemessage_images/${deleteMessageInChat.message_imageName}`
-    //   );
-
-    //   // console.log(deleteImageFromCloudinary);
-    // }
+      // console.log(deleteImageFromCloudinary);
+    }
 
     res.json({ message: "Message has been deleted." });
   }),

@@ -4,9 +4,13 @@ const request = require("supertest");
 
 const prisma = require("../db/client");
 
+const userRouter = require("../routes/userRouter");
+
 const jwt = require("jsonwebtoken");
 
 const app = require("../app");
+
+app.use("/", userRouter);
 
 describe("testing user controllers and routes", (done) => {
   beforeAll(async () => {
@@ -37,8 +41,6 @@ describe("testing user controllers and routes", (done) => {
         });
 
       const findRegisteredUser = await prisma.user.findFirst();
-
-      console.log(findRegisteredUser);
 
       expect(status).toBe(200);
 
@@ -227,18 +229,22 @@ describe("testing user controllers and routes", (done) => {
     });
 
     it("should response with 400 if the password conditions are not met", async () => {
-      const { status, body } = await request(app).post("/users/signup").send({
-        first_name: "preslaw3",
-        last_name: "cvetanow3",
-        username: "preslaw3",
-        password: "1234567",
-        confirm_password: "12345678Bg@",
-        bio: "",
-        profile_picture: "",
-        background_picture: "",
-      });
+      const { status, header, body } = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "preslaw3",
+          last_name: "cvetanow3",
+          username: "preslaw3",
+          password: "1234567",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
       expect(status).toBe(400);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body[1].msg).toEqual(
         "Password must be minimum 8 characters, must have one upper and lower letter, and one special character"
@@ -246,18 +252,22 @@ describe("testing user controllers and routes", (done) => {
     });
 
     it("should response with 400 if the passwords are not matched", async () => {
-      const { status, body } = await request(app).post("/users/signup").send({
-        first_name: "preslaw3",
-        last_name: "cvetanow3",
-        username: "preslaw3",
-        password: "1234567Bg@",
-        confirm_password: "12345678Bg",
-        bio: "",
-        profile_picture: "",
-        background_picture: "",
-      });
+      const { status, body, header } = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "preslaw3",
+          last_name: "cvetanow3",
+          username: "preslaw3",
+          password: "1234567Bg@",
+          confirm_password: "12345678Bg",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
       expect(status).toBe(400);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body[0].msg).toEqual("Passwords must match");
     });
@@ -281,6 +291,7 @@ describe("testing user controllers and routes", (done) => {
         });
 
         expect(response.body).toHaveProperty("token");
+
         expect(jwt.verify(response.body.token, process.env.SECRET) === String);
       });
 
@@ -333,6 +344,7 @@ describe("testing user controllers and routes", (done) => {
         expect(response.status).toBe(200);
 
         expect(response.body).toHaveProperty("token");
+
         expect(jwt.verify(response.body.token, process.env.SECRET) === String);
       });
     });

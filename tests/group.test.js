@@ -2,8 +2,6 @@ const request = require("supertest");
 
 const groupRouter = require("../routes/groupRouter");
 
-const chatRouter = require("../routes/chatRouter");
-
 const prisma = require("../db/client");
 
 const app = require("../app");
@@ -77,7 +75,7 @@ describe("testing groups controllers and routes", (done) => {
 
       const chatId = response.body.createChat.id;
 
-      const { body, status } = await request(app)
+      const { body, status, header } = await request(app)
         .post("/groups")
         .send({
           group_name: "group",
@@ -88,6 +86,8 @@ describe("testing groups controllers and routes", (done) => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(200);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body.createGroup.id).toEqual(body.createGroup.id);
 
@@ -162,6 +162,8 @@ describe("testing groups controllers and routes", (done) => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(400);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body[0].msg).toBe(
         "Group name must be between 3 and 30 characters"
@@ -314,47 +316,47 @@ describe("testing groups controllers and routes", (done) => {
       expect(body.sendImageInGroup.groupId).toBe(body.sendImageInGroup.groupId);
     });
 
-    // it("should respond with 400 if image is too big", async () => {
-    //   const userOneId = userOne.body.signUpAndCreateUser.id;
+    it("should respond with 400 if image is too big", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
 
-    //   const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-    //   const token = getToken;
+      const token = getToken;
 
-    //   const response = await request(app)
-    //     .post("/chats")
-    //     .send({ id: userOneId, id: userTwoId })
-    //     .set("Authorization", `Bearer ${token}`);
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
 
-    //   const chatId = response.body.createChat.id;
+      const chatId = response.body.createChat.id;
 
-    //   const createNewGroup = await request(app)
-    //     .post("/groups")
-    //     .send({
-    //       group_name: "new group",
-    //       id: userOneId,
-    //       id: userTwoId,
-    //       chatId: chatId,
-    //     })
-    //     .set("Authorization", `Bearer ${token}`);
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "new group",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
 
-    //   const groupId = createNewGroup.body.createGroup.id;
+      const groupId = createNewGroup.body.createGroup.id;
 
-    //   const { body, header, status } = await request(app)
-    //     .post(`/groups/${groupId}/image/${chatId}`)
+      const { body, header, status } = await request(app)
+        .post(`/groups/${groupId}/image/${chatId}`)
 
-    //     .attach("file", "public/Teruel.jpg")
+        .attach("file", "public/Teruel.jpg")
 
-    //     .set("Authorization", `Bearer ${token}`);
+        .set("Authorization", `Bearer ${token}`);
 
-    //   expect(body[0].msg).toBe("Image size exceed 5 MB");
+      expect(body[0].msg).toBe("Image size exceed 5 MB");
 
-    //   expect(header["content-type"]).toMatch(/json/);
+      expect(header["content-type"]).toMatch(/json/);
 
-    //   expect(status).toBe(400);
-    // }, 10000);
+      expect(status).toBe(400);
+    }, 10000);
 
-    it("should respond with message if you dont upload an image", async () => {
+    it("should respond with message if you don't upload an image", async () => {
       const userOneId = userOne.body.signUpAndCreateUser.id;
 
       const userTwoId = userTwo.body.signUpAndCreateUser.id;
@@ -524,8 +526,6 @@ describe("testing groups controllers and routes", (done) => {
         })
         .set("Authorization", `Bearer ${token}`);
 
-      // const groupId = createNewGroup.body.createGroup.id;
-
       const { body, status } = await request(app)
         .get("/groups/")
 
@@ -568,7 +568,7 @@ describe("testing groups controllers and routes", (done) => {
 
       const groupId = createNewGroup.body.createGroup.id;
 
-      const { body, status } = await request(app)
+      const { body, status, header } = await request(app)
         .put(`/groups/${groupId}`)
         .send({
           group_name: "updated group",
@@ -576,6 +576,8 @@ describe("testing groups controllers and routes", (done) => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(200);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body.editGroupName.id).toEqual(body.editGroupName.id);
 
@@ -608,7 +610,7 @@ describe("testing groups controllers and routes", (done) => {
 
       const groupId = createNewGroup.body.createGroup.id;
 
-      const { body, status } = await request(app)
+      const { body, status, header } = await request(app)
         .put(`/groups/${groupId}`)
         .send({
           group_name: "g",
@@ -616,6 +618,8 @@ describe("testing groups controllers and routes", (done) => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(400);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body[0].msg).toEqual(
         "Group name must be between 3 and 30 characters"
@@ -648,7 +652,7 @@ describe("testing groups controllers and routes", (done) => {
 
       const groupId = createNewGroup.body.createGroup.id;
 
-      const { body, status } = await request(app)
+      const { body, status, header } = await request(app)
         .put(`/groups/${groupId}`)
         .send({
           group_name: "updated group",
@@ -656,6 +660,8 @@ describe("testing groups controllers and routes", (done) => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(400);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body[0].msg).toEqual("Group name is already taken");
     });
@@ -705,7 +711,7 @@ describe("testing groups controllers and routes", (done) => {
 
       const messageId = sendNewMessageInGroup.body.sendMessageInGroup.id;
 
-      const { body, status } = await request(app)
+      const { body, status, header } = await request(app)
         .put(`/groups/${groupId}/message/${messageId}`)
         .send({
           message_text: "updated message",
@@ -717,6 +723,8 @@ describe("testing groups controllers and routes", (done) => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(200);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body.editMessageInGroup.id).toEqual(body.editMessageInGroup.id);
 
@@ -798,12 +806,14 @@ describe("testing groups controllers and routes", (done) => {
 
       const messageId = sendNewMessageInGroup.body.sendMessageInGroup.id;
 
-      const { body, status } = await request(app)
+      const { body, status, header } = await request(app)
         .delete(`/groups/${groupId}/message/${messageId}`)
 
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(200);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body.message).toEqual("Message has been deleted.");
     });
@@ -836,12 +846,14 @@ describe("testing groups controllers and routes", (done) => {
 
       const chatGroupId = createNewGroup.body.createGroupChat.id;
 
-      const { body, status } = await request(app)
+      const { body, status, header } = await request(app)
         .delete(`/groups/${groupId}`)
 
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(200);
+
+      expect(header["content-type"]).toMatch(/json/);
 
       expect(body.message).toEqual("Group has been deleted.");
     });

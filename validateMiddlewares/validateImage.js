@@ -2,8 +2,6 @@ const { check } = require("express-validator");
 
 const imageSizeExceedLimit = "Image size exceed 5 MB";
 
-const formatImageSize = require("../middleware/formatImageSize");
-
 const cloudinary = require("cloudinary").v2;
 
 const validateImage = [

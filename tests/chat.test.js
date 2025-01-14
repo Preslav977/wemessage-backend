@@ -2,8 +2,6 @@ const request = require("supertest");
 
 const chatRouter = require("../routes/chatRouter");
 
-const userRouter = require("../routes/userRouter");
-
 const prisma = require("../db/client");
 
 const app = require("../app");
@@ -11,8 +9,43 @@ const app = require("../app");
 app.use("/", chatRouter);
 
 describe("testing chats controllers and routes", (done) => {
+  let userOne;
+
+  let userTwo;
+
+  let getToken;
+
   beforeAll(async () => {
     await prisma.$connect();
+
+    userOne = await request(app).post("/users/signup").send({
+      first_name: "newuser",
+      last_name: "newuser",
+      username: "newuser",
+      password: "12345678Bg@",
+      confirm_password: "12345678Bg@",
+      bio: "",
+      profile_picture: "",
+      background_picture: "",
+    });
+
+    userTwo = await request(app).post("/users/signup").send({
+      first_name: "newuser1",
+      last_name: "newuser1",
+      username: "newuser1",
+      password: "12345678Bg@",
+      confirm_password: "12345678Bg@",
+      bio: "",
+      profile_picture: "",
+      background_picture: "",
+    });
+
+    const logInGetToken = await request(app).post("/users/login").send({
+      username: "newuser",
+      password: "12345678Bg@",
+    });
+
+    getToken = logInGetToken.body.token;
   });
 
   afterAll(async () => {
@@ -22,44 +55,41 @@ describe("testing chats controllers and routes", (done) => {
 
     await prisma.message.deleteMany();
 
+    await prisma.user.deleteMany();
+
     done;
   });
 
   describe("[POST] /chats", () => {
     it("should respond with 200 if chat is started between 2 users", async () => {
-      app.use("/users", userRouter);
+      const userOneId = userOne.body.signUpAndCreateUser.id;
 
-      const response = await request(app).post("/users/login").send({
-        username: "preslaw123",
-        password: "12345678Bg@",
-      });
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-      const token = response.body.token;
+      const token = getToken;
 
       const { body, status } = await request(app)
         .post("/chats")
-        .send({ id: 863, id: 864 })
+        .send({ id: userOneId, id: userTwoId })
         .set("Authorization", `Bearer ${token}`);
+
       expect(status).toBe(200);
+
       expect(body.createChat.id).toBe(body.createChat.id);
+
       expect(body.createChat.groupId).toBe(null);
     });
 
     it("should respond with 200 when user sends a message", async () => {
-      app.use("/users", userRouter);
+      const userOneId = userOne.body.signUpAndCreateUser.id;
 
-      let response = await request(app).post("/users/login").send({
-        username: "preslaw123",
-        password: "12345678Bg@",
-      });
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-      const token = response.body.token;
-
-      app.use("/chats", chatRouter);
+      const token = getToken;
 
       const { body } = await request(app)
         .post("/chats")
-        .send({ id: 863, id: 864 })
+        .send({ id: userOneId, id: userTwoId })
         .set("Authorization", `Bearer ${token}`);
 
       response = await request(app)
@@ -71,7 +101,7 @@ describe("testing chats controllers and routes", (done) => {
           message_imageType: "",
           message_imageSize: 0,
           createdAt: new Date(),
-          userId: 863,
+          userId: userOneId,
           chatId: `${body.createChat.id}`,
         })
         .set("Authorization", `Bearer ${token}`);
@@ -89,7 +119,9 @@ describe("testing chats controllers and routes", (done) => {
       expect(response.body.sendMessageInChat.createdAt).toBe(
         response.body.sendMessageInChat.createdAt
       );
-      expect(response.body.sendMessageInChat.userId).toBe(863);
+      expect(response.body.sendMessageInChat.userId).toBe(
+        response.body.sendMessageInChat.userId
+      );
 
       expect(response.body.sendMessageInChat.chatId).toBe(
         response.body.sendMessageInChat.chatId
@@ -97,20 +129,17 @@ describe("testing chats controllers and routes", (done) => {
     });
 
     it("should response with 200 when user sends a image in chat", async () => {
-      app.use("/users", userRouter);
+      const userOneId = userOne.body.signUpAndCreateUser.id;
 
-      let response = await request(app).post("/users/login").send({
-        username: "preslaw123",
-        password: "12345678Bg@",
-      });
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-      const token = response.body.token;
+      const token = getToken;
 
       app.use("/chats", chatRouter);
 
       response = await request(app)
         .post("/chats")
-        .send({ id: 863, id: 864 })
+        .send({ id: userOneId, id: userTwoId })
         .set("Authorization", `Bearer ${token}`);
 
       const { body, status } = await request(app)
@@ -148,20 +177,15 @@ describe("testing chats controllers and routes", (done) => {
     });
 
     it("should respond with 400 if the image is too big", async () => {
-      app.use("/users", userRouter);
+      const userOneId = userOne.body.signUpAndCreateUser.id;
 
-      let response = await request(app).post("/users/login").send({
-        username: "preslaw123",
-        password: "12345678Bg@",
-      });
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-      const token = response.body.token;
-
-      app.use("/chats", chatRouter);
+      const token = getToken;
 
       response = await request(app)
         .post("/chats")
-        .send({ id: 863, id: 864 })
+        .send({ id: userOneId, id: userTwoId })
         .set("Authorization", `Bearer ${token}`);
 
       const { body, status } = await request(app)
@@ -177,20 +201,15 @@ describe("testing chats controllers and routes", (done) => {
     }, 10000);
 
     it("should respond with message if you dont upload an image", async () => {
-      app.use("/users", userRouter);
+      const userOneId = userOne.body.signUpAndCreateUser.id;
 
-      let response = await request(app).post("/users/login").send({
-        username: "preslaw123",
-        password: "12345678Bg@",
-      });
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-      const token = response.body.token;
-
-      app.use("/chats", chatRouter);
+      const token = getToken;
 
       response = await request(app)
         .post("/chats")
-        .send({ id: 863, id: 864 })
+        .send({ id: userOneId, id: userTwoId })
         .set("Authorization", `Bearer ${token}`);
 
       const { body } = await request(app)
@@ -205,20 +224,17 @@ describe("testing chats controllers and routes", (done) => {
 
     describe("[GET] /chats", () => {
       it("should respond with 200 and chat information", async () => {
-        app.use("/users", userRouter);
+        const userOneId = userOne.body.signUpAndCreateUser.id;
 
-        let response = await request(app).post("/users/login").send({
-          username: "preslaw123",
-          password: "12345678Bg@",
-        });
+        const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-        const token = response.body.token;
+        const token = getToken;
 
         app.use("/chats", chatRouter);
 
         response = await request(app)
           .post("/chats")
-          .send({ id: 863, id: 864 })
+          .send({ id: userOneId, id: userTwoId })
           .set("Authorization", `Bearer ${token}`);
 
         const { body, status } = await request(app)
@@ -227,11 +243,11 @@ describe("testing chats controllers and routes", (done) => {
 
         expect(status).toBe(200);
 
-        expect(body.findChatById.users[0].first_name).toEqual("preslaw123");
+        expect(body.findChatById.users[0].first_name).toEqual("newuser1");
 
-        expect(body.findChatById.users[0].last_name).toEqual("cvetanow123");
+        expect(body.findChatById.users[0].last_name).toEqual("newuser1");
 
-        expect(body.findChatById.users[0].username).toEqual("preslaw123");
+        expect(body.findChatById.users[0].username).toEqual("newuser1");
 
         expect(body.findChatById.users[0].password).toEqual(
           body.findChatById.users[0].password
@@ -245,17 +261,17 @@ describe("testing chats controllers and routes", (done) => {
 
         expect(body.findChatById.users[0].profile_picture).toBe("");
 
-        expect(body.findChatById.users[0].online_presence).toBe("ONLINE");
+        expect(body.findChatById.users[0].online_presence).toBe("OFFLINE");
 
         expect(body.findChatById.users[0].role).toBe("USER");
 
         expect(body.findChatById.users[0].groupId).toBe(null);
 
-        expect(body.findChatById.users[1].first_name).toEqual("preslaw1234");
+        expect(body.findChatById.users[1].first_name).toEqual("newuser");
 
-        expect(body.findChatById.users[1].last_name).toEqual("cvetanow1234");
+        expect(body.findChatById.users[1].last_name).toEqual("newuser");
 
-        expect(body.findChatById.users[1].username).toEqual("preslaw1234");
+        expect(body.findChatById.users[1].username).toEqual("newuser");
 
         expect(body.findChatById.users[1].password).toEqual(
           body.findChatById.users[1].password
@@ -269,7 +285,7 @@ describe("testing chats controllers and routes", (done) => {
 
         expect(body.findChatById.users[1].profile_picture).toBe("");
 
-        expect(body.findChatById.users[1].online_presence).toBe("OFFLINE");
+        expect(body.findChatById.users[1].online_presence).toBe("ONLINE");
 
         expect(body.findChatById.users[1].role).toBe("USER");
 
@@ -279,20 +295,17 @@ describe("testing chats controllers and routes", (done) => {
       });
 
       it("should respond with 200 when getting all chats information", async () => {
-        app.use("/users", userRouter);
+        const userOneId = userOne.body.signUpAndCreateUser.id;
 
-        let response = await request(app).post("/users/login").send({
-          username: "preslaw123",
-          password: "12345678Bg@",
-        });
+        const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-        const token = response.body.token;
+        const token = getToken;
 
         app.use("/chats", chatRouter);
 
         response = await request(app)
           .post("/chats")
-          .send({ id: 863, id: 864 })
+          .send({ id: userOneId, id: userTwoId })
           .set("Authorization", `Bearer ${token}`);
 
         const { body, status } = await request(app)
@@ -338,20 +351,16 @@ describe("testing chats controllers and routes", (done) => {
     });
     describe("[PUT] /chats", () => {
       it("should respond with 200 when the image is being edited", async () => {
-        app.use("/users", userRouter);
+        const userOneId = userOne.body.signUpAndCreateUser.id;
 
-        let response = await request(app).post("/users/login").send({
-          username: "preslaw123",
-          password: "12345678Bg@",
-        });
+        const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-        const token = response.body.token;
-
+        const token = getToken;
         app.use("/chats", chatRouter);
 
         let startConversation = await request(app)
           .post("/chats")
-          .send({ id: 863, id: 864 })
+          .send({ id: userOneId, id: userTwoId })
           .set("Authorization", `Bearer ${token}`);
 
         response = await request(app)
@@ -363,7 +372,7 @@ describe("testing chats controllers and routes", (done) => {
             message_imageType: "",
             message_imageSize: 0,
             createdAt: new Date(),
-            userId: 863,
+            userId: userOneId,
             chatId: `${startConversation.body.createChat.id}`,
           })
           .set("Authorization", `Bearer ${token}`);
@@ -413,20 +422,17 @@ describe("testing chats controllers and routes", (done) => {
     });
     describe("[DELETE] /chats", () => {
       it("should respond with message if message is being deleted", async () => {
-        app.use("/users", userRouter);
+        const userOneId = userOne.body.signUpAndCreateUser.id;
 
-        const logInUser = await request(app).post("/users/login").send({
-          username: "preslaw123",
-          password: "12345678Bg@",
-        });
+        const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-        const token = logInUser.body.token;
+        const token = getToken;
 
         app.use("/chats", chatRouter);
 
         const startConversation = await request(app)
           .post("/chats")
-          .send({ id: 863, id: 864 })
+          .send({ id: userOneId, id: userTwoId })
           .set("Authorization", `Bearer ${token}`);
 
         const sendMessage = await request(app)
@@ -438,7 +444,7 @@ describe("testing chats controllers and routes", (done) => {
             message_imageType: "",
             message_imageSize: 0,
             createdAt: new Date(),
-            userId: 863,
+            userId: userOneId,
             chatId: `${startConversation.body.createChat.id}`,
           })
           .set("Authorization", `Bearer ${token}`);

@@ -674,8 +674,6 @@ describe("testing groups controllers and routes", (done) => {
 
       const chatId = response.body.createChat.id;
 
-      // console.log(chatId);
-
       const createNewGroup = await request(app)
         .post("/groups")
         .send({
@@ -685,8 +683,6 @@ describe("testing groups controllers and routes", (done) => {
           chatId: chatId,
         })
         .set("Authorization", `Bearer ${token}`);
-
-      console.log(createNewGroup.body);
 
       const groupId = createNewGroup.body.createGroup.id;
 
@@ -706,8 +702,6 @@ describe("testing groups controllers and routes", (done) => {
           groupId: groupId,
         })
         .set("Authorization", `Bearer ${token}`);
-
-      console.log(sendNewMessageInGroup.body);
 
       const messageId = sendNewMessageInGroup.body.sendMessageInGroup.id;
 
@@ -755,6 +749,101 @@ describe("testing groups controllers and routes", (done) => {
       expect(body.editMessageInGroup.groupId).toBe(
         body.editMessageInGroup.groupId
       );
+    });
+  });
+
+  describe("[DELETE] /groups", () => {
+    it("should respond with 200 when deleting a message", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "deleted group",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const chatGroupId = createNewGroup.body.createGroupChat.id;
+
+      const sendNewMessageInGroup = await request(app)
+        .post(`/groups/${groupId}/message/${chatGroupId}`)
+        .send({
+          message_text: "hello",
+          message_imageName: "",
+          message_imageURL: "",
+          message_imageType: "",
+          message_imageSize: 0,
+          createdAt: new Date(),
+          userId: userOneId,
+          chatId: chatGroupId,
+          groupId: groupId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const messageId = sendNewMessageInGroup.body.sendMessageInGroup.id;
+
+      const { body, status } = await request(app)
+        .delete(`/groups/${groupId}/message/${messageId}`)
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(status).toBe(200);
+
+      expect(body.message).toEqual("Message has been deleted.");
+    });
+
+    it("should respond with 200 when group is been deleted", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "the last group",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const chatGroupId = createNewGroup.body.createGroupChat.id;
+
+      const { body, status } = await request(app)
+        .delete(`/groups/${groupId}`)
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(status).toBe(200);
+
+      expect(body.message).toEqual("Group has been deleted.");
     });
   });
 });

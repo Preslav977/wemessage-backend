@@ -277,7 +277,7 @@ exports.group_delete_message = [
       where: {
         id: Number(messageId),
         userId: req.authData.id,
-        chatId: findByGroupId.chat[0].id,
+        chatId: findByGroupId.chats[0].id,
         groupId: id,
       },
     });
@@ -318,7 +318,7 @@ exports.group_delete = [
       });
     }
 
-    console.log(loopArray(groupImagesArray));
+    // console.log(loopArray(groupImagesArray));
 
     await prisma.group.delete({
       where: {

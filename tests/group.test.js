@@ -497,5 +497,85 @@ describe("testing groups controllers and routes", (done) => {
         body.findByGroupId.users[1].groupId
       );
     });
+
+    it("should respond with 200 and get all groups information", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "another group",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      // const groupId = createNewGroup.body.createGroup.id;
+
+      const { body, status } = await request(app)
+        .get("/groups/")
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(status).toBe(200);
+
+      body.findAllGroups.map((groups) => {
+        expect(groups.id).toEqual(groups.id);
+
+        expect(groups.name).toEqual(groups.name);
+      });
+    });
+  });
+
+  describe("[PUT] /groups", () => {
+    it("should respond with 200 when updating group name", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "another group 123",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const { body, status } = await request(app)
+        .put(`/groups/${groupId}`)
+        .send({
+          group_name: "updated group",
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(body.editGroupName.id).toEqual(body.editGroupName.id);
+
+      expect(body.editGroupName.group_name).toEqual("updated group");
+    });
   });
 });

@@ -188,6 +188,8 @@ exports.group_update = [
   verifyToken,
   validateGroup,
   asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
     const { id } = req.params;
 
     const { group_name } = req.body;

@@ -573,9 +573,51 @@ describe("testing groups controllers and routes", (done) => {
         })
         .set("Authorization", `Bearer ${token}`);
 
+      expect(status).toBe(200);
+
       expect(body.editGroupName.id).toEqual(body.editGroupName.id);
 
       expect(body.editGroupName.group_name).toEqual("updated group");
+    });
+
+    it("should respond with 400 when failing to meet group name condition", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "random group123",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const { body, status } = await request(app)
+        .put(`/groups/${groupId}`)
+        .send({
+          group_name: "g",
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(status).toBe(400);
+
+      expect(body[0].msg).toEqual(
+        "Group name must be between 3 and 30 characters"
+      );
     });
   });
 });

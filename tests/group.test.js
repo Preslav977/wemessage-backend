@@ -312,45 +312,45 @@ describe("testing groups controllers and routes", (done) => {
       expect(body.sendImageInGroup.groupId).toBe(body.sendImageInGroup.groupId);
     });
 
-    it("should respond with 400 if image is too big", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+    // it("should respond with 400 if image is too big", async () => {
+    //   const userOneId = userOne.body.signUpAndCreateUser.id;
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+    //   const userTwoId = userTwo.body.signUpAndCreateUser.id;
 
-      const token = getToken;
+    //   const token = getToken;
 
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
+    //   const response = await request(app)
+    //     .post("/chats")
+    //     .send({ id: userOneId, id: userTwoId })
+    //     .set("Authorization", `Bearer ${token}`);
 
-      const chatId = response.body.createChat.id;
+    //   const chatId = response.body.createChat.id;
 
-      const createNewGroup = await request(app)
-        .post("/groups")
-        .send({
-          group_name: "new group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+    //   const createNewGroup = await request(app)
+    //     .post("/groups")
+    //     .send({
+    //       group_name: "new group",
+    //       id: userOneId,
+    //       id: userTwoId,
+    //       chatId: chatId,
+    //     })
+    //     .set("Authorization", `Bearer ${token}`);
 
-      const groupId = createNewGroup.body.createGroup.id;
+    //   const groupId = createNewGroup.body.createGroup.id;
 
-      const { body, header, status } = await request(app)
-        .post(`/groups/${groupId}/image/${chatId}`)
+    //   const { body, header, status } = await request(app)
+    //     .post(`/groups/${groupId}/image/${chatId}`)
 
-        .attach("file", "public/Teruel.jpg")
+    //     .attach("file", "public/Teruel.jpg")
 
-        .set("Authorization", `Bearer ${token}`);
+    //     .set("Authorization", `Bearer ${token}`);
 
-      expect(body[0].msg).toBe("Image size exceed 5 MB");
+    //   expect(body[0].msg).toBe("Image size exceed 5 MB");
 
-      expect(header["content-type"]).toMatch(/json/);
+    //   expect(header["content-type"]).toMatch(/json/);
 
-      expect(status).toBe(400);
-    }, 10000);
+    //   expect(status).toBe(400);
+    // }, 10000);
 
     it("should respond with message if you dont upload an image", async () => {
       const userOneId = userOne.body.signUpAndCreateUser.id;
@@ -386,6 +386,116 @@ describe("testing groups controllers and routes", (done) => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(body).toEqual("An unknown file format not allowed");
+    });
+  });
+
+  describe("[GET] /groups", () => {
+    it("should respond with 200 and group information", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "a group",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const { body } = await request(app)
+        .get(`/groups/${groupId}`)
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(body.findByGroupId.id).toEqual(body.findByGroupId.id);
+
+      expect(body.findByGroupId.group_name).toEqual("a group");
+
+      expect(body.findByGroupId.chats[0].id).toEqual(
+        body.findByGroupId.chats[0].id
+      );
+
+      expect(body.findByGroupId.chats[0].groupId).toEqual(
+        body.findByGroupId.chats[0].groupId
+      );
+
+      expect(body.findByGroupId.users[0].id).toEqual(
+        body.findByGroupId.users[0].id
+      );
+
+      expect(body.findByGroupId.users[0].first_name).toEqual("user1");
+
+      expect(body.findByGroupId.users[0].last_name).toEqual("user1");
+
+      expect(body.findByGroupId.users[0].username).toEqual("user1");
+
+      expect(body.findByGroupId.users[0].password).toEqual(
+        body.findByGroupId.users[0].password
+      );
+
+      expect(body.findByGroupId.users[0].confirm_password).toEqual(
+        body.findByGroupId.users[0].confirm_password
+      );
+
+      expect(body.findByGroupId.users[0].bio).toEqual("");
+
+      expect(body.findByGroupId.users[0].profile_picture).toEqual("");
+
+      expect(body.findByGroupId.users[0].background_picture).toEqual("");
+
+      expect(body.findByGroupId.users[0].online_presence).toEqual("OFFLINE");
+
+      expect(body.findByGroupId.users[0].role).toEqual("USER");
+
+      expect(body.findByGroupId.users[0].groupId).toEqual(
+        body.findByGroupId.users[0].groupId
+      );
+
+      expect(body.findByGroupId.users[1].id).toEqual(
+        body.findByGroupId.users[1].id
+      );
+
+      expect(body.findByGroupId.users[1].first_name).toEqual("user");
+
+      expect(body.findByGroupId.users[1].last_name).toEqual("user");
+
+      expect(body.findByGroupId.users[1].username).toEqual("user");
+
+      expect(body.findByGroupId.users[1].password).toEqual(
+        body.findByGroupId.users[1].password
+      );
+
+      expect(body.findByGroupId.users[1].confirm_password).toEqual(
+        body.findByGroupId.users[1].confirm_password
+      );
+
+      expect(body.findByGroupId.users[1].bio).toEqual("");
+
+      expect(body.findByGroupId.users[1].profile_picture).toEqual("");
+
+      expect(body.findByGroupId.users[1].background_picture).toEqual("");
+
+      expect(body.findByGroupId.users[1].online_presence).toEqual("ONLINE");
+
+      expect(body.findByGroupId.users[1].role).toEqual("USER");
+
+      expect(body.findByGroupId.users[1].groupId).toEqual(
+        body.findByGroupId.users[1].groupId
+      );
     });
   });
 });

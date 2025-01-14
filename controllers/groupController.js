@@ -166,7 +166,7 @@ exports.group_details = [
         id: id,
       },
       include: {
-        chat: true,
+        chats: true,
         users: true,
       },
     });
@@ -260,7 +260,7 @@ exports.group_delete_message = [
         id: id,
       },
       include: {
-        chat: true,
+        chats: true,
       },
     });
 

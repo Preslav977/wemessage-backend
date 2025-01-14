@@ -28,7 +28,7 @@
     "start": "node --watch app.js",
     "populate": "node db/populatedb.js",
     "format": "npx prisma format",
-    "dev": "NODE_ENV=development && node app.js",
+    "dev": "NODE_ENV=development && node listen.js",
     "test": "NODE_ENV=test && clear && jest"
   },
   "keywords": [],

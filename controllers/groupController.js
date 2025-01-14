@@ -43,6 +43,8 @@ exports.group_create = [
         },
       });
 
+      // console.log(createGroupChat);
+
       const createGroup = await prisma.group.create({
         data: {
           group_name: group_name,
@@ -54,6 +56,8 @@ exports.group_create = [
           },
         },
       });
+
+      // console.log(createGroup);
 
       res.json({ createGroupChat, createGroup });
     }
@@ -78,6 +82,8 @@ exports.group_send_message = [
           id: chatId,
         },
       });
+
+      // console.log(findRelatedChatToGroup);
 
       const sendMessageInGroup = await prisma.message.create({
         data: {
@@ -233,16 +239,17 @@ exports.group_edit_message = [
         },
       });
 
+      // console.log(req.authData.id, findByGroupId.chats[0].id, id);
+
       const editMessageInGroup = await prisma.message.update({
         where: {
           id: Number(messageId),
           userId: req.authData.id,
-          chatId: findByGroupId.conversations[0].id,
+          chatId: findByGroupId.chats[0].id,
           groupId: id,
         },
         data: {
           message_text: message_text,
-          message_image: "",
           updatedAt: new Date(),
         },
       });

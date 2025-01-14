@@ -194,6 +194,8 @@ describe("testing groups controllers and routes", (done) => {
 
       const groupId = createNewGroup.body.createGroup.id;
 
+      const chatGroupId = createNewGroup.body.createGroupChat.id;
+
       const { body, header, status } = await request(app)
         .post(`/groups/${groupId}/message/${chatId}`)
         .send({
@@ -204,7 +206,7 @@ describe("testing groups controllers and routes", (done) => {
           message_imageSize: 0,
           createdAt: new Date(),
           userId: userOneId,
-          chatId: chatId,
+          chatId: chatGroupId,
           groupId: groupId,
         })
         .set("Authorization", `Bearer ${token}`);
@@ -656,6 +658,103 @@ describe("testing groups controllers and routes", (done) => {
       expect(status).toBe(400);
 
       expect(body[0].msg).toEqual("Group name is already taken");
+    });
+
+    it("should respond with 200 if the message is updated", async () => {
+      const userOneId = userOne.body.signUpAndCreateUser.id;
+
+      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+
+      const token = getToken;
+
+      const response = await request(app)
+        .post("/chats")
+        .send({ id: userOneId, id: userTwoId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const chatId = response.body.createChat.id;
+
+      // console.log(chatId);
+
+      const createNewGroup = await request(app)
+        .post("/groups")
+        .send({
+          group_name: "group12345",
+          id: userOneId,
+          id: userTwoId,
+          chatId: chatId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      console.log(createNewGroup.body);
+
+      const groupId = createNewGroup.body.createGroup.id;
+
+      const chatGroupId = createNewGroup.body.createGroupChat.id;
+
+      const sendNewMessageInGroup = await request(app)
+        .post(`/groups/${groupId}/message/${chatGroupId}`)
+        .send({
+          message_text: "hello",
+          message_imageName: "",
+          message_imageURL: "",
+          message_imageType: "",
+          message_imageSize: 0,
+          createdAt: new Date(),
+          userId: userOneId,
+          chatId: chatGroupId,
+          groupId: groupId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      console.log(sendNewMessageInGroup.body);
+
+      const messageId = sendNewMessageInGroup.body.sendMessageInGroup.id;
+
+      const { body, status } = await request(app)
+        .put(`/groups/${groupId}/message/${messageId}`)
+        .send({
+          message_text: "updated message",
+          updatedAt: new Date(),
+          userId: userOneId,
+          chatId: chatGroupId,
+          groupId: groupId,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(status).toBe(200);
+
+      expect(body.editMessageInGroup.id).toEqual(body.editMessageInGroup.id);
+
+      expect(body.editMessageInGroup.message_text).toEqual("updated message");
+
+      expect(body.editMessageInGroup.message_imageName).toBe("");
+
+      expect(body.editMessageInGroup.message_imageURL).toBe("");
+
+      expect(body.editMessageInGroup.message_imageType).toBe("");
+
+      expect(body.editMessageInGroup.message_imageSize).toBe(0);
+
+      expect(body.editMessageInGroup.createdAt).toBe(
+        body.editMessageInGroup.createdAt
+      );
+
+      expect(body.editMessageInGroup.updatedAt).toBe(
+        body.editMessageInGroup.updatedAt
+      );
+
+      expect(body.editMessageInGroup.userId).toEqual(
+        body.editMessageInGroup.userId
+      );
+
+      expect(body.editMessageInGroup.chatId).toEqual(
+        body.editMessageInGroup.chatId
+      );
+
+      expect(body.editMessageInGroup.groupId).toBe(
+        body.editMessageInGroup.groupId
+      );
     });
   });
 });

@@ -78,7 +78,7 @@ passport.use(
         },
       });
 
-      // console.log(user);
+      console.log(user);
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
@@ -116,7 +116,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  "user/login",
+  "users/login",
   passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/",
@@ -124,14 +124,14 @@ app.post(
 );
 
 app.get(
-  "/user/logout",
+  "users/logout",
   verifyToken,
   asyncHandler(async (req, res, next) => {
     req.logout((err) => {
       if (err) {
         return next(err);
       }
-      res.redirect("/user/login");
+      res.redirect("users/login");
     });
 
     await prisma.user.update({
@@ -154,8 +154,8 @@ app.use("/chats", chatRouter);
 app.use("/groups", groupRouter);
 
 app.use((err, req, res, next) => {
-  res.status(err.status || 500);
-  console.error(err);
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
 });
 
 module.exports = app;

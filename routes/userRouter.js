@@ -14,7 +14,12 @@ userRouter.post("/login_guest", userController.user_log_in_guest);
 
 userRouter.get("/", userController.user_get_details);
 
-userRouter.put("/profile/:id", userController.user_update_background_image);
+userRouter.put(
+  "/profile/background_image/:id",
+  userController.user_update_background_image
+);
+
+userRouter.put("/profile/image/:id", userController.user_update_profile_image);
 
 userRouter.put("/profile/edit/:id", userController.user_update_profile);
 

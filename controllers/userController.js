@@ -18,6 +18,16 @@ const validateUserProfilePasswords = require("../validateMiddlewares/validateUse
 
 const prisma = require("../db/client");
 
+const upload = require("../middleware/multer");
+
+const handleFileUpload = require("../middleware/handleFileUpload");
+
+const runMiddleware = require("../middleware/runMiddleware");
+
+const multerFileUploadMiddleware = upload.single("uploaded_file");
+
+const validateImage = require("../validateMiddlewares/validateImage");
+
 exports.user_sign_up = [
   validateUserRegistration,
   asyncHandler(async (req, res, next) => {
@@ -59,6 +69,8 @@ exports.user_log_in = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.user;
 
+    console.log(id);
+
     jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
       res.json({ token });
     });
@@ -77,7 +89,7 @@ exports.user_log_in = [
 exports.user_log_in_admin = [
   passport.authenticate("local", { session: false }),
   (req, res) => {
-    const { id, user_role } = req.user;
+    const { id, role } = req.user;
 
     jwt.sign(
       {
@@ -87,7 +99,7 @@ exports.user_log_in_admin = [
       process.env.SECRET,
       { expiresIn: "25m" },
       (err, token) => {
-        if (user_role !== "ADMIN") {
+        if (role !== "ADMIN") {
           res.json({ message: "Unauthorized" });
         }
         res.json({ token });
@@ -99,16 +111,13 @@ exports.user_log_in_admin = [
 exports.user_log_in_guest = [
   passport.authenticate("local", { session: false }),
   (req, res) => {
-    const { id, user_role } = req.user;
+    const { id } = req.user;
 
-    jwt.sign(
-      { id, user_role },
-      process.env.SECRET,
-      { expiresIn: "25m" },
-      (err, token) => {
-        res.json({ token });
-      }
-    );
+    console.log(id);
+
+    jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
+      res.json({ token });
+    });
   },
 ];
 
@@ -124,24 +133,98 @@ exports.user_get_details = [
   }),
 ];
 
+let cloudinaryUserBackgroundImageResponse;
+
 exports.user_update_background_image = [
   verifyToken,
+
   asyncHandler(async (req, res, next) => {
+    try {
+      await runMiddleware(req, res, multerFileUploadMiddleware);
+
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+      cloudinaryUserBackgroundImageResponse = await handleFileUpload(
+        dataURI,
+        req.file.originalname
+      );
+
+      next();
+    } catch (error) {
+      res.json(error.message);
+    }
+  }),
+
+  validateImage,
+  async (req, res, next) => {
+    const errors = validationResult(req);
+
     const { id } = req.params;
 
-    const { background_picture } = req.body;
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const updateUserBackgroundPicture = await prisma.user.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          background_picture: cloudinaryUserBackgroundImageResponse.secure_url,
+        },
+      });
 
-    const updateUserBackgroundPicture = await prisma.user.update({
-      where: {
-        id: Number(id),
-      },
-      data: {
-        background_picture: background_picture,
-      },
-    });
+      res.json({ updateUserBackgroundPicture });
+    }
+  },
+];
 
-    res.json({ updateUserBackgroundPicture });
+let cloudinaryUserProfileImageResponse;
+
+exports.user_update_profile_image = [
+  verifyToken,
+
+  asyncHandler(async (req, res, next) => {
+    try {
+      await runMiddleware(req, res, multerFileUploadMiddleware);
+
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+      cloudinaryUserProfileImageResponse = await handleFileUpload(
+        dataURI,
+        req.file.originalname
+      );
+
+      next();
+    } catch (error) {
+      res.json(error.message);
+    }
   }),
+
+  validateImage,
+  async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id } = req.params;
+
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      const updateUserProfilePicture = await prisma.user.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          profile_picture: cloudinaryUserProfileImageResponse.secure_url,
+        },
+      });
+
+      res.json({ updateUserProfilePicture });
+    }
+  },
 ];
 
 exports.user_update_profile = [
@@ -152,7 +235,7 @@ exports.user_update_profile = [
 
     const { id } = req.params;
 
-    const { first_name, last_name, username, bio, profile_picture } = req.body;
+    const { first_name, last_name, username, bio } = req.body;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -166,7 +249,6 @@ exports.user_update_profile = [
           last_name: last_name,
           username: username,
           bio: bio,
-          profile_picture: profile_picture,
         },
       });
 

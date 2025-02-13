@@ -8,11 +8,11 @@ const validateImage = [
   check("uploaded_image").custom(async (value, { req }) => {
     const uploadedImageSize = req.file.size;
 
-    console.log(uploadedImageSize);
+    // console.log(uploadedImageSize);
 
-    if (uploadedImageSize === 0) {
-      throw new Error("Please select image to upload!");
-    }
+    // if (uploadedImageSize === 0) {
+    //   throw new Error("Please select image to upload!");
+    // }
 
     if (uploadedImageSize > 5000000) {
       const deleteUploadedImage = await cloudinary.uploader.destroy(

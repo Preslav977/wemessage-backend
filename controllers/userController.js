@@ -24,7 +24,7 @@ const handleFileUpload = require("../middleware/handleFileUpload");
 
 const runMiddleware = require("../middleware/runMiddleware");
 
-const multerFileUploadMiddleware = upload.single("uploaded_file");
+const multerFileUploadMiddleware = upload.single("file");
 
 const validateImage = require("../validateMiddlewares/validateImage");
 
@@ -69,7 +69,7 @@ exports.user_log_in = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.user;
 
-    console.log(id);
+    // console.log(id);
 
     jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
       res.json({ token });
@@ -92,10 +92,7 @@ exports.user_log_in_admin = [
     const { id, role } = req.user;
 
     jwt.sign(
-      {
-        id,
-        user_role,
-      },
+      { id, role },
       process.env.SECRET,
       { expiresIn: "25m" },
       (err, token) => {
@@ -113,7 +110,7 @@ exports.user_log_in_guest = [
   (req, res) => {
     const { id } = req.user;
 
-    console.log(id);
+    // console.log(id);
 
     jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
       res.json({ token });
@@ -142,14 +139,24 @@ exports.user_update_background_image = [
     try {
       await runMiddleware(req, res, multerFileUploadMiddleware);
 
+      // console.log(req.file, req.body);
+
       const b64 = Buffer.from(req.file.buffer).toString("base64");
 
+      // console.log(b64);
+
       const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+      // console.log(req.file, req.body);
+
+      // console.log(dataURI);
 
       cloudinaryUserBackgroundImageResponse = await handleFileUpload(
         dataURI,
         req.file.originalname
       );
+
+      // console.log(cloudinaryUserBackgroundImageResponse);
 
       next();
     } catch (error) {

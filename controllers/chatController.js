@@ -14,7 +14,7 @@ const handleFileUpload = require("../middleware/handleFileUpload");
 
 const runMiddleware = require("../middleware/runMiddleware");
 
-const multerFileUploadMiddleware = upload.single("uploaded_image");
+const multerFileUploadMiddleware = upload.single("file");
 
 const validateImage = require("../validateMiddlewares/validateImage");
 

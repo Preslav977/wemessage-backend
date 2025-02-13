@@ -409,7 +409,7 @@ describe("testing user controllers and routes", (done) => {
             password: "12345678Bg@",
             confirm_password: "12345678Bg@",
             bio: "1",
-            profile_picture: "2",
+            profile_picture: "",
             background_picture: "",
           })
           .set("Authorization", `Bearer ${getToken}`);
@@ -438,7 +438,7 @@ describe("testing user controllers and routes", (done) => {
 
         expect(response.body.updateUserProfile.bio).toBe("1");
 
-        expect(response.body.updateUserProfile.profile_picture).toBe("2");
+        expect(response.body.updateUserProfile.profile_picture).toBe("");
 
         expect(response.body.updateUserProfile.background_picture).toBe("");
 
@@ -470,7 +470,7 @@ describe("testing user controllers and routes", (done) => {
             password: "12345678Bg@",
             confirm_password: "12345678Bg@",
             bio: "1",
-            profile_picture: "2",
+            profile_picture: "",
             background_picture: "",
           })
           .set("Authorization", `Bearer ${getToken}`);
@@ -497,17 +497,19 @@ describe("testing user controllers and routes", (done) => {
           .set("Authorization", `Bearer ${getToken}`);
 
         response = await request(app)
-          .put(`/users/profile/${response.body.id}`)
-          .send({
-            background_picture: "123",
-          })
-          .set("Authorization", `Bearer ${getToken}`);
+          .put(`/users/profile/background_image/${response.body.id}`)
+
+          .set("Authorization", `Bearer ${getToken}`)
+
+          .attach("file", "public/Screenshot_2025-01-09_12-31-20.png");
 
         expect(response.status).toBe(200);
 
         expect(
           response.body.updateUserBackgroundPicture.background_picture
-        ).toBe("123");
+        ).toBe(
+          "https://res.cloudinary.com/dsofl9wku/image/upload/v1736579322/wemessage_images/Screenshot_2025-01-09_12-31-20.png.png"
+        );
       });
 
       it("should respond with 200 when updating the user passwords", async () => {

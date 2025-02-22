@@ -31,7 +31,8 @@
     "populate": "node db/populatedb.js",
     "format": "npx prisma format",
     "dev": "NODE_ENV=development && node --watch listen.js",
-    "test": "NODE_ENV=test && clear && jest"
+    "test": "NODE_ENV=test && clear && jest",
+    "test_env": "NODE_ENV=test && node --watch listen.js"
   },
   "keywords": [],
   "author": "",

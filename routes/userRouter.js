@@ -24,7 +24,7 @@ userRouter.put("/profile/image/:id", userController.user_update_profile_image);
 userRouter.put("/profile/edit/:id", userController.user_update_profile);
 
 userRouter.put(
-  "/profile/change-passwords/:id",
+  "/profile/change_passwords/:id",
   userController.user_update_passwords
 );
 

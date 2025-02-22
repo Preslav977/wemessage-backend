@@ -4,7 +4,7 @@ const lengthErr = "must be between 1 and 30 characters";
 
 const takenError = "is already taken";
 
-const bioLengthErr = "must not be more than 150 characters";
+const bioLengthErr = "must be between 1 and 150 characters";
 
 const prisma = require("../db/client");
 
@@ -70,6 +70,7 @@ const validateUserProfile = [
 
   body("bio")
     .trim()
+    .isLength({ min: 1 })
     .isLength({ max: 150 })
     .escape()
     .withMessage(`Bio ${bioLengthErr}`),

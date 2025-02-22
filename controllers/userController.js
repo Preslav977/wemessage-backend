@@ -274,41 +274,26 @@ exports.user_update_passwords = [
 
     const { old_password, password, confirm_password } = req.body;
 
-    const user = await prisma.user.findFirst({
-      where: {
-        id: Number(id),
-      },
-    });
-
-    const checkIfOldPasswordMatches = await bcrypt.compare(
-      old_password,
-      user.password
-    );
-
     bcrypt.hash(password, 10, async (err, hashedPassword) => {
       if (err) {
         console.error("Failed to hash the passwords", err);
         throw err;
       }
 
-      if (checkIfOldPasswordMatches) {
-        if (!errors.isEmpty()) {
-          res.status(400).send(errors.array());
-        } else {
-          const updateUserPasswords = await prisma.user.update({
-            where: {
-              id: Number(id),
-            },
-            data: {
-              password: hashedPassword,
-              confirm_password: hashedPassword,
-            },
-          });
-
-          res.json({ updateUserPasswords });
-        }
+      if (!errors.isEmpty()) {
+        res.status(400).send(errors.array());
       } else {
-        res.json({ message: "Old password doesn't match." });
+        const updateUserPasswords = await prisma.user.update({
+          where: {
+            id: Number(id),
+          },
+          data: {
+            password: hashedPassword,
+            confirm_password: hashedPassword,
+          },
+        });
+
+        res.json({ updateUserPasswords });
       }
     });
   }),

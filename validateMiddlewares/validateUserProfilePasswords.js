@@ -25,7 +25,7 @@ const validateUserProfilePasswords = [
     );
 
     if (!checkIfOldPasswordMatches) {
-      throw new Error("Old password doesn't match");
+      throw new Error("Old password doesn't match.");
     } else {
       //
     }

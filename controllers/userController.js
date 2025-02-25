@@ -130,6 +130,19 @@ exports.user_get_details = [
   }),
 ];
 
+exports.user_get_all = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const getAllUsers = await prisma.user.findMany({
+      orderBy: {
+        id: "asc",
+      },
+    });
+
+    res.json(getAllUsers);
+  }),
+];
+
 let cloudinaryUserBackgroundImageResponse;
 
 exports.user_update_background_image = [

@@ -14,6 +14,8 @@ userRouter.post("/login_guest", userController.user_log_in_guest);
 
 userRouter.get("/", userController.user_get_details);
 
+userRouter.get("/all", userController.user_get_all);
+
 userRouter.put(
   "/profile/background_image/:id",
   userController.user_update_background_image

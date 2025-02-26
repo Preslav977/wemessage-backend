@@ -125,7 +125,25 @@ exports.user_get_details = [
       where: {
         id: req.authData.id,
       },
+      orderBy: {
+        id: "asc",
+      },
     });
+    res.json(getUserById);
+  }),
+];
+
+exports.user_get_by_id = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const getUserById = await prisma.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+
     res.json(getUserById);
   }),
 ];

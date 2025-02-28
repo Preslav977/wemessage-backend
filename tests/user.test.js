@@ -525,7 +525,7 @@ describe("testing user controllers and routes", (done) => {
           .set("Authorization", `Bearer ${getToken}`);
 
         response = await request(app)
-          .put(`/users/profile/change-passwords/${response.body.id}`)
+          .put(`/users/profile/change_passwords/${response.body.id}`)
           .send({
             old_password: "12345678Bg@",
             password: "12345678Bg@123",
@@ -557,10 +557,10 @@ describe("testing user controllers and routes", (done) => {
           .set("Authorization", `Bearer ${getToken}`);
 
         response = await request(app)
-          .put(`/users/profile/change-passwords/${response.body.id}`)
+          .put(`/users/profile/change_passwords/${response.body.id}`)
           .send({
             old_password: "12345678Bg@12",
-            password: "12345678",
+            password: "12345678Bg@123",
             confirm_password: "12345678Bg@123",
           })
           .set("Authorization", `Bearer ${getToken}`);
@@ -581,7 +581,7 @@ describe("testing user controllers and routes", (done) => {
           .set("Authorization", `Bearer ${getToken}`);
 
         response = await request(app)
-          .put(`/users/profile/change-passwords/${response.body.id}`)
+          .put(`/users/profile/change_passwords/${response.body.id}`)
           .send({
             old_password: "12345678Bg@123",
             password: "12345678",

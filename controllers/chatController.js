@@ -21,17 +21,33 @@ const validateImage = require("../validateMiddlewares/validateImage");
 exports.chat_create = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
-    const { id } = req.body;
+    const { receiverId } = req.body;
 
-    const createChat = await prisma.chat.create({
-      data: {
+    const searchIfChatExists = await prisma.chat.findFirst({
+      select: {
         users: {
-          connect: [{ id: req.authData.id }, { id: Number(id) }],
+          include: true,
+          where: {
+            id: Number(receiverId),
+          },
         },
       },
     });
 
-    res.json({ createChat });
+    if (searchIfChatExists) {
+      console.log("Chat with that user already exists");
+      return;
+    } else {
+      const createChat = await prisma.chat.create({
+        data: {
+          users: {
+            connect: [{ id: req.authData.id }, { id: Number(receiverId) }],
+          },
+        },
+      });
+
+      res.json({ createChat });
+    }
   }),
 ];
 
@@ -137,7 +153,7 @@ exports.chat_details = [
 ];
 
 exports.chats_get = [
-  verifyToken,
+  // verifyToken,
   asyncHandler(async (req, res, next) => {
     const getChats = await prisma.chat.findMany({
       include: {
@@ -145,7 +161,21 @@ exports.chats_get = [
       },
     });
 
-    res.json({ getChats });
+    const users = [];
+
+    for (let i = 0; i < getChats.length; i++) {
+      for (let j = 0; j < getChats[i].users.length; j++) {
+        // console.log(getChats[i].users[j]);
+
+        users.push(getChats[i].users[j]);
+      }
+    }
+
+    console.log(users);
+
+    res.json(getChats);
+
+    return users;
   }),
 ];
 

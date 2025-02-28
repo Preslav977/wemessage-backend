@@ -14,8 +14,6 @@ userRouter.post("/login_guest", userController.user_log_in_guest);
 
 userRouter.get("/", userController.user_get_details);
 
-userRouter.get("/:id", userController.user_get_by_id);
-
 userRouter.get("/all", userController.user_get_all);
 
 userRouter.put(
@@ -33,5 +31,7 @@ userRouter.put(
 );
 
 userRouter.get("/search", userController.user_search);
+
+userRouter.get("/:id", userController.user_get_by_id);
 
 module.exports = userRouter;

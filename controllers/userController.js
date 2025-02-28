@@ -138,7 +138,7 @@ exports.user_get_by_id = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const getUserById = await prisma.findFirst({
+    const getUserById = await prisma.user.findFirst({
       where: {
         id: Number(id),
       },

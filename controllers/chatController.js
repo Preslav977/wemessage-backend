@@ -21,47 +21,33 @@ const validateImage = require("../validateMiddlewares/validateImage");
 exports.chat_create = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
-    const { senderId, receiverId } = req.body;
+    const { receiverId } = req.body;
 
-    // const searchIfChatExists = await prisma.chat.findUnique({
-    //   where: {
-    //     id: Number(receiverId),
-    //     },
-    //     select: {
-    //       users: true
-    //     }
-    //   },
-    //   // select: {
-    //   //   users: {
-    //   //     include: true,
-    //   //     where: {
-    //   //       id: Number(receiverId),
-    //   //     },
-    //   //   },
-    //   // },
-    // })
-
-    // const searchIfChatExists = await prisma.chat.find({
-    //   where: {},
-    //   select: {
-    //     users: true,
-    //   },
-    // });
-
-    // console.log(searchIfChatExists);
-
-    // if (searchIfChatExists) {
-    //   return;
-    // }
-
-    const createChat = await prisma.chat.create({
-      data: {
-        senderId: req.authData.id,
+    const searchIfChatWithSameUserExists = await prisma.chat.findFirst({
+      select: {
+        user: {
+          include: true,
+        },
+      },
+      where: {
         receiverId: Number(receiverId),
       },
     });
 
-    res.json({ createChat });
+    console.log(searchIfChatWithSameUserExists);
+
+    if (searchIfChatWithSameUserExists !== null) {
+      console.log("There is an already chat with the same user");
+      return;
+    } else {
+      const createChat = await prisma.chat.create({
+        data: {
+          receiverId: Number(receiverId),
+        },
+      });
+
+      res.json(createChat);
+    }
   }),
 ];
 

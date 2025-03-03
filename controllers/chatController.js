@@ -34,8 +34,6 @@ exports.chat_create = [
       },
     });
 
-    console.log(searchIfChatWithSameUserExists);
-
     if (searchIfChatWithSameUserExists !== null) {
       console.log("There is an already chat with the same user");
       return;
@@ -77,7 +75,7 @@ exports.chat_send_message = [
         },
       });
 
-      res.json({ sendMessageInChat });
+      res.json(sendMessageInChat);
     }
   }),
 ];
@@ -128,7 +126,7 @@ exports.chat_send_image = [
         },
       });
 
-      res.send({ sendImageInChat });
+      res.send(sendImageInChat);
     }
   },
 ];
@@ -148,7 +146,7 @@ exports.chat_details = [
       },
     });
 
-    res.json({ findChatById });
+    res.json(findChatById);
   }),
 ];
 
@@ -156,21 +154,13 @@ exports.chats_get = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
     const getChats = await prisma.chat.findMany({
-      select: {
-        users: {
-          include: true,
-          where: {
-            NOT: {
-              id: req.authData.id,
-            },
-          },
-        },
+      include: {
+        user: true,
+        messages: true,
       },
     });
 
     res.json(getChats);
-
-    return users;
   }),
 ];
 
@@ -198,7 +188,7 @@ exports.chat_edit_message = [
         },
       });
 
-      res.json({ editMessageInChat });
+      res.json(editMessageInChat);
     }
   }),
 ];

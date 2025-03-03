@@ -33,27 +33,16 @@ exports.group_create = [
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      const createGroupChat = await prisma.chat.create({
-        data: {
-          users: {
-            connect: [{ id: req.authData.id }, { id: Number(id) }],
-          },
-        },
-      });
-
       const createGroup = await prisma.group.create({
         data: {
           group_name: group_name,
           users: {
             connect: [{ id: req.authData.id }, { id: Number(id) }],
           },
-          chats: {
-            connect: [{ id: createGroupChat.id }],
-          },
         },
       });
 
-      res.json({ createGroupChat, createGroup });
+      res.json(createGroup);
     }
   }),
 ];
@@ -64,19 +53,13 @@ exports.group_send_message = [
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
-    const { id, chatId } = req.params;
+    const { id } = req.params;
 
     const { message_text } = req.body;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      const findRelatedChatToGroup = await prisma.chat.findFirst({
-        where: {
-          id: chatId,
-        },
-      });
-
       const sendMessageInGroup = await prisma.message.create({
         data: {
           message_text: message_text,
@@ -86,12 +69,11 @@ exports.group_send_message = [
           message_imageSize: 0,
           createdAt: new Date(),
           userId: req.authData.id,
-          chatId: findRelatedChatToGroup.id,
           groupId: id,
         },
       });
 
-      res.json({ sendMessageInGroup });
+      res.json(sendMessageInGroup);
     }
   }),
 ];
@@ -124,13 +106,7 @@ exports.group_send_image = [
   async (req, res, next) => {
     const errors = validationResult(req);
 
-    const { id, chatId } = req.params;
-
-    const findRelatedChatToGroup = await prisma.chat.findFirst({
-      where: {
-        id: chatId,
-      },
-    });
+    const { id } = req.params;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -144,12 +120,12 @@ exports.group_send_image = [
           message_imageSize: req.file.size,
           createdAt: new Date(),
           userId: req.authData.id,
-          chatId: findRelatedChatToGroup.id,
+
           groupId: id,
         },
       });
 
-      res.json({ sendImageInGroup });
+      res.json(sendImageInGroup);
     }
   },
 ];
@@ -164,12 +140,12 @@ exports.group_details = [
         id: id,
       },
       include: {
-        chats: true,
         users: true,
+        messages: true,
       },
     });
 
-    res.json({ findByGroupId });
+    res.json(findByGroupId);
   }),
 ];
 
@@ -178,7 +154,7 @@ exports.groups_get = [
   asyncHandler(async (req, res, next) => {
     const findAllGroups = await prisma.group.findMany({});
 
-    res.json({ findAllGroups });
+    res.json(findAllGroups);
   }),
 ];
 
@@ -204,7 +180,7 @@ exports.group_update = [
         },
       });
 
-      res.json({ editGroupName });
+      res.json(editGroupName);
     }
   }),
 ];
@@ -222,20 +198,10 @@ exports.group_edit_message = [
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      const findByGroupId = await prisma.group.findFirst({
-        where: {
-          id: id,
-        },
-        include: {
-          chats: true,
-        },
-      });
-
       const editMessageInGroup = await prisma.message.update({
         where: {
           id: Number(messageId),
           userId: req.authData.id,
-          chatId: findByGroupId.chats[0].id,
           groupId: id,
         },
         data: {
@@ -244,7 +210,7 @@ exports.group_edit_message = [
         },
       });
 
-      res.json({ editMessageInGroup });
+      res.json(editMessageInGroup);
     }
   }),
 ];
@@ -254,20 +220,10 @@ exports.group_delete_message = [
   asyncHandler(async (req, res, next) => {
     const { id, messageId } = req.params;
 
-    const findByGroupId = await prisma.group.findFirst({
-      where: {
-        id: id,
-      },
-      include: {
-        chats: true,
-      },
-    });
-
     const deleteMessageInGroup = await prisma.message.delete({
       where: {
         id: Number(messageId),
         userId: req.authData.id,
-        chatId: findByGroupId.chats[0].id,
         groupId: id,
       },
     });

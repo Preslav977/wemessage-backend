@@ -58,7 +58,7 @@ exports.user_sign_up = [
           },
         });
 
-        res.json({ signUpAndCreateUser });
+        res.json(signUpAndCreateUser);
       }
     });
   }),
@@ -129,6 +129,7 @@ exports.user_get_details = [
         id: "asc",
       },
     });
+
     res.json(getUserById);
   }),
 ];
@@ -170,24 +171,14 @@ exports.user_update_background_image = [
     try {
       await runMiddleware(req, res, multerFileUploadMiddleware);
 
-      // console.log(req.file, req.body);
-
       const b64 = Buffer.from(req.file.buffer).toString("base64");
 
-      // console.log(b64);
-
       const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-
-      // console.log(req.file, req.body);
-
-      // console.log(dataURI);
 
       cloudinaryUserBackgroundImageResponse = await handleFileUpload(
         dataURI,
         req.file.originalname
       );
-
-      // console.log(cloudinaryUserBackgroundImageResponse);
 
       next();
     } catch (error) {
@@ -213,7 +204,7 @@ exports.user_update_background_image = [
         },
       });
 
-      res.json({ updateUserBackgroundPicture });
+      res.json(updateUserBackgroundPicture);
     }
   },
 ];
@@ -260,7 +251,7 @@ exports.user_update_profile_image = [
         },
       });
 
-      res.json({ updateUserProfilePicture });
+      res.json(updateUserProfilePicture);
     }
   },
 ];
@@ -290,7 +281,7 @@ exports.user_update_profile = [
         },
       });
 
-      res.json({ updateUserProfile });
+      res.json(updateUserProfile);
     }
   }),
 ];
@@ -324,7 +315,7 @@ exports.user_update_passwords = [
           },
         });
 
-        res.json({ updateUserPasswords });
+        res.json(updateUserPasswords);
       }
     });
   }),

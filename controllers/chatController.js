@@ -21,33 +21,47 @@ const validateImage = require("../validateMiddlewares/validateImage");
 exports.chat_create = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
-    const { receiverId } = req.body;
+    const { senderId, receiverId } = req.body;
 
-    const searchIfChatExists = await prisma.chat.findFirst({
-      select: {
-        users: {
-          include: true,
-          where: {
-            id: Number(receiverId),
-          },
-        },
+    // const searchIfChatExists = await prisma.chat.findUnique({
+    //   where: {
+    //     id: Number(receiverId),
+    //     },
+    //     select: {
+    //       users: true
+    //     }
+    //   },
+    //   // select: {
+    //   //   users: {
+    //   //     include: true,
+    //   //     where: {
+    //   //       id: Number(receiverId),
+    //   //     },
+    //   //   },
+    //   // },
+    // })
+
+    // const searchIfChatExists = await prisma.chat.find({
+    //   where: {},
+    //   select: {
+    //     users: true,
+    //   },
+    // });
+
+    // console.log(searchIfChatExists);
+
+    // if (searchIfChatExists) {
+    //   return;
+    // }
+
+    const createChat = await prisma.chat.create({
+      data: {
+        senderId: req.authData.id,
+        receiverId: Number(receiverId),
       },
     });
 
-    if (searchIfChatExists) {
-      console.log("Chat with that user already exists");
-      return;
-    } else {
-      const createChat = await prisma.chat.create({
-        data: {
-          users: {
-            connect: [{ id: req.authData.id }, { id: Number(receiverId) }],
-          },
-        },
-      });
-
-      res.json({ createChat });
-    }
+    res.json({ createChat });
   }),
 ];
 
@@ -153,25 +167,20 @@ exports.chat_details = [
 ];
 
 exports.chats_get = [
-  // verifyToken,
+  verifyToken,
   asyncHandler(async (req, res, next) => {
     const getChats = await prisma.chat.findMany({
-      include: {
-        users: true,
+      select: {
+        users: {
+          include: true,
+          where: {
+            NOT: {
+              id: req.authData.id,
+            },
+          },
+        },
       },
     });
-
-    const users = [];
-
-    for (let i = 0; i < getChats.length; i++) {
-      for (let j = 0; j < getChats[i].users.length; j++) {
-        // console.log(getChats[i].users[j]);
-
-        users.push(getChats[i].users[j]);
-      }
-    }
-
-    console.log(users);
 
     res.json(getChats);
 

@@ -58,6 +58,39 @@ exports.chat_create = [
   }),
 ];
 
+exports.chat_details = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const findChatById = await prisma.chat.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        user: true,
+        messages: true,
+      },
+    });
+
+    res.json(findChatById);
+  }),
+];
+
+exports.chats_get = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const getChats = await prisma.chat.findMany({
+      include: {
+        user: true,
+        messages: true,
+      },
+    });
+
+    res.json(getChats);
+  }),
+];
+
 exports.chat_send_message = [
   verifyToken,
   validateMessage,
@@ -158,39 +191,6 @@ exports.chat_send_image = [
       res.send(getImageInChat);
     }
   },
-];
-
-exports.chat_details = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-
-    const findChatById = await prisma.chat.findFirst({
-      where: {
-        id: id,
-      },
-      include: {
-        user: true,
-        messages: true,
-      },
-    });
-
-    res.json(findChatById);
-  }),
-];
-
-exports.chats_get = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const getChats = await prisma.chat.findMany({
-      include: {
-        user: true,
-        messages: true,
-      },
-    });
-
-    res.json(getChats);
-  }),
 ];
 
 exports.chat_edit_message = [

@@ -42,8 +42,46 @@ exports.group_create = [
         },
       });
 
-      res.json(createGroup);
+      const getCreatedGroup = await prisma.group.findFirst({
+        where: {
+          id: createGroup.id,
+        },
+        include: {
+          users: true,
+          messages: true,
+        },
+      });
+
+      res.json(getCreatedGroup);
     }
+  }),
+];
+
+exports.group_details = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const findByGroupId = await prisma.group.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        users: true,
+        messages: true,
+      },
+    });
+
+    res.json(findByGroupId);
+  }),
+];
+
+exports.groups_get = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const findAllGroups = await prisma.group.findMany({});
+
+    res.json(findAllGroups);
   }),
 ];
 
@@ -73,7 +111,17 @@ exports.group_send_message = [
         },
       });
 
-      res.json(sendMessageInGroup);
+      const getCreatedMessageInGroup = await prisma.group.findFirst({
+        where: {
+          id: sendMessageInGroup.id,
+        },
+        include: {
+          users: true,
+          messages: true,
+        },
+      });
+
+      res.json(getCreatedMessageInGroup);
     }
   }),
 ];
@@ -125,37 +173,19 @@ exports.group_send_image = [
         },
       });
 
-      res.json(sendImageInGroup);
+      const getCreatedImageInGroup = await prisma.group.findFirst({
+        where: {
+          id: sendImageInGroup.id,
+        },
+        include: {
+          users: true,
+          messages: true,
+        },
+      });
+
+      res.json(getCreatedImageInGroup);
     }
   },
-];
-
-exports.group_details = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-
-    const findByGroupId = await prisma.group.findFirst({
-      where: {
-        id: id,
-      },
-      include: {
-        users: true,
-        messages: true,
-      },
-    });
-
-    res.json(findByGroupId);
-  }),
-];
-
-exports.groups_get = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const findAllGroups = await prisma.group.findMany({});
-
-    res.json(findAllGroups);
-  }),
 ];
 
 exports.group_update = [
@@ -180,7 +210,17 @@ exports.group_update = [
         },
       });
 
-      res.json(editGroupName);
+      const getUpdatedGroupName = await prisma.group.findFirst({
+        where: {
+          id: editGroupName.id,
+        },
+        include: {
+          users: true,
+          messages: true,
+        },
+      });
+
+      res.json(getUpdatedGroupName);
     }
   }),
 ];
@@ -210,7 +250,17 @@ exports.group_edit_message = [
         },
       });
 
-      res.json(editMessageInGroup);
+      const getUpdatedMessageInGroup = await prisma.group.findFirst({
+        where: {
+          id: editMessageInGroup.id,
+        },
+        include: {
+          users: true,
+          messages: true,
+        },
+      });
+
+      res.json(getUpdatedMessageInGroup);
     }
   }),
 ];
@@ -236,7 +286,17 @@ exports.group_delete_message = [
       // console.log(deleteImageFromCloudinary);
     }
 
-    res.json({ message: "Message has been deleted." });
+    const getDeletedMessageOrImageInGroup = await prisma.group.findFirst({
+      where: {
+        id: deleteMessageInGroup.id,
+      },
+      include: {
+        users: true,
+        messages: true,
+      },
+    });
+
+    res.json(getDeletedMessageOrImageInGroup);
   }),
 ];
 
@@ -272,6 +332,16 @@ exports.group_delete = [
       },
     });
 
-    res.json({ message: "Group has been deleted." });
+    const getDeletedGroup = await prisma.group.findFirst({
+      where: {
+        id: checkIfGroupExists.id,
+      },
+      include: {
+        users: true,
+        messages: true,
+      },
+    });
+
+    res.json(getDeletedGroup);
   }),
 ];

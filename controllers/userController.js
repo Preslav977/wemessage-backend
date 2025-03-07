@@ -204,7 +204,13 @@ exports.user_update_background_image = [
         },
       });
 
-      res.json(updateUserBackgroundPicture);
+      const getUserUpdatedBackgroundPicture = await prisma.user.findFirst({
+        where: {
+          id: Number(updateUserBackgroundPicture.id),
+        },
+      });
+
+      res.json(getUserUpdatedBackgroundPicture);
     }
   },
 ];
@@ -251,7 +257,13 @@ exports.user_update_profile_image = [
         },
       });
 
-      res.json(updateUserProfilePicture);
+      const getUserUpdatedProfilePicture = await prisma.user.findFirst({
+        where: {
+          id: Number(updateUserProfilePicture.id),
+        },
+      });
+
+      res.json(getUserUpdatedProfilePicture);
     }
   },
 ];
@@ -281,7 +293,13 @@ exports.user_update_profile = [
         },
       });
 
-      res.json(updateUserProfile);
+      const getUserUpdatedUserInformation = await prisma.user.findFirst({
+        where: {
+          id: Number(updateUserProfile.id),
+        },
+      });
+
+      res.json(getUserUpdatedUserInformation);
     }
   }),
 ];
@@ -315,7 +333,13 @@ exports.user_update_passwords = [
           },
         });
 
-        res.json(updateUserPasswords);
+        const getUserUpdatedPasswords = await prisma.user.findFirst({
+          where: {
+            id: Number(updateUserPasswords.id),
+          },
+        });
+
+        res.json(getUserUpdatedPasswords);
       }
     });
   }),

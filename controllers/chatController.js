@@ -141,7 +141,7 @@ exports.chat_details = [
         id: id,
       },
       include: {
-        users: true,
+        user: true,
         messages: true,
       },
     });

@@ -35,7 +35,6 @@ exports.chat_create = [
     });
 
     if (searchIfChatWithSameUserExists !== null) {
-      console.log("There is an already chat with the same user");
       return;
     } else {
       const createChat = await prisma.chat.create({
@@ -44,7 +43,17 @@ exports.chat_create = [
         },
       });
 
-      res.json(createChat);
+      const getCreatedChat = await prisma.chat.findFirst({
+        where: {
+          id: createChat.id,
+        },
+        include: {
+          user: true,
+          messages: true,
+        },
+      });
+
+      res.json(getCreatedChat);
     }
   }),
 ];
@@ -75,7 +84,17 @@ exports.chat_send_message = [
         },
       });
 
-      res.json(sendMessageInChat);
+      const getMessageInChat = await prisma.chat.findFirst({
+        where: {
+          id: sendMessageInChat.id,
+        },
+        include: {
+          user: true,
+          messages: true,
+        },
+      });
+
+      res.json(getMessageInChat);
     }
   }),
 ];
@@ -126,7 +145,17 @@ exports.chat_send_image = [
         },
       });
 
-      res.send(sendImageInChat);
+      const getImageInChat = await prisma.chat.findFirst({
+        where: {
+          id: sendImageInChat.id,
+        },
+        include: {
+          user: true,
+          messages: true,
+        },
+      });
+
+      res.send(getImageInChat);
     }
   },
 ];
@@ -188,7 +217,17 @@ exports.chat_edit_message = [
         },
       });
 
-      res.json(editMessageInChat);
+      const getUpdatedMessageInChat = await prisma.chat.findFirst({
+        where: {
+          id: editMessageInChat.id,
+        },
+        include: {
+          user: true,
+          messages: true,
+        },
+      });
+
+      res.json(getUpdatedMessageInChat);
     }
   }),
 ];
@@ -214,6 +253,16 @@ exports.chat_delete_message = [
       // console.log(deleteImageFromCloudinary);
     }
 
-    res.json({ message: "Message has been deleted." });
+    const getDeletedMessageOrImageInChat = await prisma.chat.findFirst({
+      where: {
+        id: deleteMessageInChat.id,
+      },
+      include: {
+        user: true,
+        messages: true,
+      },
+    });
+
+    res.json(getDeletedMessageOrImageInChat);
   }),
 ];

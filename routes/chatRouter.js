@@ -8,7 +8,7 @@ chatRouter.post("/", chatController.chat_create);
 
 chatRouter.post("/:id/message", chatController.chat_send_message);
 
-// chatRouter.post("/:id/image", chatController.chat_send_image);
+chatRouter.post("/:id/image", chatController.chat_send_image);
 
 chatRouter.get("/:id", chatController.chat_details);
 

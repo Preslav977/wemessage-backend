@@ -25,60 +25,54 @@ enum Presence {
 }
 
 model User {
-  id                 Int         @id @default(autoincrement())
-  first_name         String      @unique
-  last_name          String      @unique
-  username           String      @unique
+  id                 Int       @id @default(autoincrement())
+  first_name         String    @unique
+  last_name          String    @unique
+  username           String    @unique
   password           String
   confirm_password   String
   bio                String?
   profile_picture    String
   background_picture String
-  online_presence    Presence    @default(OFFLINE)
-  role               Role        @default(USER)
-  chats              Chat[]
-  globalChat         GlobalChat? @relation(fields: [globalChatId], references: [id], onDelete: Cascade)
-  globalChatId       String?
-  messages           Message[]
-  group              Group?      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  online_presence    Presence  @default(OFFLINE)
+  role               Role      @default(USER)
+  senderChat         Chat[]    @relation("senderChat")
+  receiverChat       Chat[]    @relation("receiverChat")
+  senderMessage      Message[] @relation("senderMessage")
+  receiverMessage    Message[] @relation("receiverMessage")
+  Group              Group?    @relation(fields: [groupId], references: [id])
   groupId            String?
 
   @@map("user")
 }
 
 model Chat {
-  id         String    @id @default(uuid())
-  receiverId Int
-  user       User      @relation(fields: [receiverId], references: [id], onDelete: Cascade)
-  messages   Message[]
+  id             String    @id @default(uuid())
+  senderChatId   Int
+  senderChat     User      @relation("senderChat", fields: [senderChatId], references: [id])
+  receiverChatId Int
+  receiverChat   User      @relation("receiverChat", fields: [receiverChatId], references: [id])
+  messages       Message[]
 
   @@map("chat")
 }
 
-model GlobalChat {
-  id       String    @id @default(uuid())
-  users    User[]
-  messages Message[]
-
-  @@map("globalchat")
-}
-
 model Message {
-  id                Int         @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   message_text      String
   message_imageName String
   message_imageURL  String
   message_imageType String
   message_imageSize Int
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  userId            Int
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chat              Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  senderMessageId   Int
+  senderMessage     User     @relation("senderMessage", fields: [senderMessageId], references: [id], onDelete: Cascade)
+  receiverMessageId Int
+  receiverMessage   User     @relation("receiverMessage", fields: [receiverMessageId], references: [id], onDelete: Cascade)
+  chat              Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId            String
-  globalChat        GlobalChat? @relation(fields: [globalChatId], references: [id], onDelete: Cascade)
-  globalChatId      String?
-  group             Group?      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group             Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId           String?
 
   @@map("message")

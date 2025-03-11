@@ -12,6 +12,8 @@ userRouter.post("/login_admin", userController.user_log_in_admin);
 
 userRouter.post("/login_guest", userController.user_log_in_guest);
 
+userRouter.get("/search", userController.user_search);
+
 userRouter.get("/", userController.user_get_details);
 
 userRouter.get("/all", userController.user_get_all);
@@ -29,8 +31,6 @@ userRouter.put(
   "/profile/change_passwords/:id",
   userController.user_update_passwords
 );
-
-userRouter.get("/search", userController.user_search);
 
 userRouter.get("/:id", userController.user_get_by_id);
 

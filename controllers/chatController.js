@@ -119,7 +119,7 @@ exports.chat_send_message = [
 
       const getMessageInChat = await prisma.chat.findFirst({
         where: {
-          id: sendMessageInChat.id,
+          id: id,
         },
         include: {
           user: true,
@@ -180,7 +180,7 @@ exports.chat_send_image = [
 
       const getImageInChat = await prisma.chat.findFirst({
         where: {
-          id: sendImageInChat.id,
+          id: id,
         },
         include: {
           user: true,
@@ -219,7 +219,7 @@ exports.chat_edit_message = [
 
       const getUpdatedMessageInChat = await prisma.chat.findFirst({
         where: {
-          id: editMessageInChat.id,
+          id: id,
         },
         include: {
           user: true,
@@ -255,7 +255,7 @@ exports.chat_delete_message = [
 
     const getDeletedMessageOrImageInChat = await prisma.chat.findFirst({
       where: {
-        id: deleteMessageInChat.id,
+        id: id,
       },
       include: {
         user: true,

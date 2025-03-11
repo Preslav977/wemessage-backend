@@ -21,16 +21,28 @@ const validateImage = require("../validateMiddlewares/validateImage");
 exports.chat_create = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
-    const { receiverId } = req.body;
+    const { senderId, receiverId } = req.body;
 
     const searchIfChatWithSameUserExists = await prisma.chat.findFirst({
       select: {
-        user: {
+        senderChat: {
+          include: true,
+        },
+        receiverChat: {
           include: true,
         },
       },
       where: {
-        receiverId: Number(receiverId),
+        OR: [
+          {
+            senderChatId: Number(senderId),
+            receiverChatId: Number(receiverId),
+          },
+          {
+            senderChatId: Number(senderId),
+            receiverChatId: Number(receiverId),
+          },
+        ],
       },
     });
 
@@ -39,7 +51,8 @@ exports.chat_create = [
     } else {
       const createChat = await prisma.chat.create({
         data: {
-          receiverId: Number(receiverId),
+          senderChatId: Number(senderId),
+          receiverChatId: Number(receiverId),
         },
       });
 
@@ -48,7 +61,8 @@ exports.chat_create = [
           id: createChat.id,
         },
         include: {
-          user: true,
+          senderChat: true,
+          receiverChat: true,
           messages: true,
         },
       });
@@ -68,7 +82,8 @@ exports.chat_details = [
         id: id,
       },
       include: {
-        user: true,
+        senderChat: true,
+        receiverChat: true,
         messages: true,
       },
     });
@@ -82,7 +97,8 @@ exports.chats_get = [
   asyncHandler(async (req, res, next) => {
     const getChats = await prisma.chat.findMany({
       include: {
-        user: true,
+        senderChat: true,
+        receiverChat: true,
         messages: true,
       },
     });
@@ -99,12 +115,12 @@ exports.chat_send_message = [
 
     const { id } = req.params;
 
-    const { message_text } = req.body;
+    const { message_text, receiverId } = req.body;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      const sendMessageInChat = await prisma.message.create({
+      await prisma.message.create({
         data: {
           message_text: message_text,
           message_imageName: "",
@@ -112,22 +128,24 @@ exports.chat_send_message = [
           message_imageType: "",
           message_imageSize: 0,
           createdAt: new Date(),
-          userId: req.authData.id,
+          senderMessageId: req.authData.id,
+          receiverMessageId: Number(receiverId),
           chatId: id,
         },
       });
 
-      const getMessageInChat = await prisma.chat.findFirst({
+      const getChatWithSendMessages = await prisma.chat.findFirst({
         where: {
           id: id,
         },
         include: {
-          user: true,
+          senderChat: true,
+          receiverChat: true,
           messages: true,
         },
       });
 
-      res.json(getMessageInChat);
+      res.json(getChatWithSendMessages);
     }
   }),
 ];
@@ -160,12 +178,12 @@ exports.chat_send_image = [
   async (req, res, next) => {
     const errors = validationResult(req);
 
-    const { id } = req.params;
+    const { id, receiverMessageId } = req.params;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      const sendImageInChat = await prisma.message.create({
+      await prisma.message.create({
         data: {
           message_text: "",
           message_imageName: req.file.originalname,
@@ -173,22 +191,24 @@ exports.chat_send_image = [
           message_imageType: req.file.mimetype,
           message_imageSize: req.file.size,
           createdAt: new Date(),
-          userId: req.authData.id,
+          senderMessageId: req.authData.id,
+          receiverChatId: Number(receiverMessageId),
           chatId: id,
         },
       });
 
-      const getImageInChat = await prisma.chat.findFirst({
+      const getChatWithSendMessagesImages = await prisma.chat.findFirst({
         where: {
           id: id,
         },
         include: {
-          user: true,
+          senderChat: true,
+          receiverChat: true,
           messages: true,
         },
       });
 
-      res.send(getImageInChat);
+      res.send(getChatWithSendMessagesImages);
     }
   },
 ];
@@ -206,7 +226,7 @@ exports.chat_edit_message = [
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      const editMessageInChat = await prisma.message.update({
+      await prisma.message.update({
         where: {
           id: Number(messageId),
           chatId: id,
@@ -217,17 +237,18 @@ exports.chat_edit_message = [
         },
       });
 
-      const getUpdatedMessageInChat = await prisma.chat.findFirst({
+      const getChatWithUpdatedMessages = await prisma.chat.findFirst({
         where: {
           id: id,
         },
         include: {
-          user: true,
+          senderChat: true,
+          receiverChat: true,
           messages: true,
         },
       });
 
-      res.json(getUpdatedMessageInChat);
+      res.json(getChatWithUpdatedMessages);
     }
   }),
 ];
@@ -241,7 +262,7 @@ exports.chat_delete_message = [
       where: {
         id: Number(messageId),
         chatId: id,
-        userId: req.authData.id,
+        senderMessageId: req.authData.id,
       },
     });
 
@@ -253,16 +274,17 @@ exports.chat_delete_message = [
       // console.log(deleteImageFromCloudinary);
     }
 
-    const getDeletedMessageOrImageInChat = await prisma.chat.findFirst({
+    const getChatWithDeletedMessages = await prisma.chat.findFirst({
       where: {
         id: id,
       },
       include: {
-        user: true,
+        senderChat: true,
+        receiverChat: true,
         messages: true,
       },
     });
 
-    res.json(getDeletedMessageOrImageInChat);
+    res.json(getChatWithDeletedMessages);
   }),
 ];

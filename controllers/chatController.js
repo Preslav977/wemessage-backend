@@ -178,7 +178,9 @@ exports.chat_send_image = [
   async (req, res, next) => {
     const errors = validationResult(req);
 
-    const { id, receiverMessageId } = req.params;
+    const { id } = req.params;
+
+    const { receiverId } = req.body;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -192,7 +194,7 @@ exports.chat_send_image = [
           message_imageSize: req.file.size,
           createdAt: new Date(),
           senderMessageId: req.authData.id,
-          receiverChatId: Number(receiverMessageId),
+          receiverMessageId: Number(receiverId),
           chatId: id,
         },
       });
@@ -245,6 +247,9 @@ exports.chat_edit_message = [
           senderChat: true,
           receiverChat: true,
           messages: true,
+        },
+        orderBy: {
+          id: "asc",
         },
       });
 

@@ -41,7 +41,7 @@ model User {
   senderMessage      Message[]                @relation("senderMessage")
   receiverMessage    Message[]                @relation("receiverMessage")
   messagesGGChat     MessageGroupGlobalChat[]
-  Group              Group?                   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group              Group?                   @relation(fields: [groupId], references: [id])
   groupId            String?
 
   @@map("user")
@@ -90,13 +90,17 @@ model MessageGroupGlobalChat {
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   group             Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId           String?
+
+  @@map("messageGGChat")
 }
 
 model Group {
-  id             String                   @id @default(uuid())
-  group_name     String                   @unique
-  users          User[]
-  messagesGGChat MessageGroupGlobalChat[]
+  id              String                   @id @default(uuid())
+  group_name      String                   @unique
+  group_image     String
+  group_creatorId Int
+  users           User[]
+  messagesGGChat  MessageGroupGlobalChat[]
 
   @@map("group")
 }

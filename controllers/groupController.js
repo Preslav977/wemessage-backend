@@ -22,13 +22,34 @@ const multerFileUploadMiddleware = upload.single("file");
 
 const validateImage = require("../validateMiddlewares/validateImage");
 
+let cloudinaryGroupResponse;
+
 exports.group_create = [
   verifyToken,
-  validateGroup,
   asyncHandler(async (req, res, next) => {
+    try {
+      await runMiddleware(req, res, multerFileUploadMiddleware);
+
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+      cloudinaryGroupResponse = await handleFileUpload(
+        dataURI,
+        req.file.originalname
+      );
+
+      next();
+    } catch (error) {
+      res.json(error.message);
+    }
+  }),
+  validateGroup,
+  validateImage,
+  async (req, res, next) => {
     const errors = validationResult(req);
 
-    const { group_name, id } = req.body;
+    const { group_name, userId, group_creatorId } = req.body;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -36,8 +57,10 @@ exports.group_create = [
       const createGroup = await prisma.group.create({
         data: {
           group_name: group_name,
+          group_image: cloudinaryGroupResponse.secure_url,
+          group_creatorId: Number(group_creatorId),
           users: {
-            connect: [{ id: req.authData.id }, { id: Number(id) }],
+            connect: [{ id: req.authData.id }, { id: Number(userId) }],
           },
         },
       });
@@ -48,13 +71,13 @@ exports.group_create = [
         },
         include: {
           users: true,
-          messageGroupGlobalChat: true,
+          messagesGGChat: true,
         },
       });
 
       res.json(getCreatedGroup);
     }
-  }),
+  },
 ];
 
 exports.group_details = [
@@ -68,7 +91,7 @@ exports.group_details = [
       },
       include: {
         users: true,
-        messageGroupGlobalChat: true,
+        messagesGGChat: true,
       },
     });
 
@@ -79,9 +102,26 @@ exports.group_details = [
 exports.groups_get = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
-    const findAllGroups = await prisma.group.findMany({});
+    const findAllGroups = await prisma.group.findMany({
+      include: {
+        users: true,
+        messagesGGChat: true,
+      },
+    });
 
     res.json(findAllGroups);
+  }),
+];
+
+exports.groups_friends_get = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { query } = req.query;
+
+    const searchForGroupFriend =
+      await prisma.$queryRaw`SELECT * FROM "user" WHERE first_name ILIKE CONCAT('%', ${query}, '%') OR last_name ILIKE CONCAT('%', ${query}, '%') OR username ILIKE CONCAT('%', ${query}, '%')`;
+
+    res.json(searchForGroupFriend);
   }),
 ];
 
@@ -178,7 +218,7 @@ exports.group_send_image = [
         },
         include: {
           users: true,
-          messageGroupGlobalChat: true,
+          messagesGGChat: true,
         },
       });
 
@@ -200,10 +240,9 @@ exports.group_edit_message = [
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      await prisma.message.update({
+      await prisma.messageGroupGlobalChat.update({
         where: {
           id: Number(messageId),
-          userId: req.authData.id,
           groupId: id,
         },
         data: {
@@ -232,7 +271,7 @@ exports.group_delete_message = [
   asyncHandler(async (req, res, next) => {
     const { id, messageId } = req.params;
 
-    const deleteMessageInGroup = await prisma.message.delete({
+    const deleteMessageInGroup = await prisma.messageGroupGlobalChat.delete({
       where: {
         id: Number(messageId),
         userId: req.authData.id,
@@ -250,7 +289,7 @@ exports.group_delete_message = [
 
     const getGroupWithDeletedMessages = await prisma.group.findFirst({
       where: {
-        id: deleteMessageInGroup.id,
+        id: id,
       },
       include: {
         users: true,
@@ -270,19 +309,29 @@ exports.group_update = [
 
     const { id } = req.params;
 
-    const { group_name } = req.body;
+    const { group_name, group_creatorId } = req.body;
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
       const editGroupName = await prisma.group.update({
+        select: {
+          users: {
+            include: true,
+          },
+        },
         where: {
-          id: id,
+          OR: [
+            { role: "ADMIN" },
+            { id: id, group_creatorId: Number(group_creatorId) },
+          ],
         },
         data: {
           group_name: group_name,
         },
       });
+
+      console.log(editGroupName);
 
       const getUpdatedGroup = await prisma.group.findFirst({
         where: {
@@ -290,12 +339,42 @@ exports.group_update = [
         },
         include: {
           users: true,
-          messageGroupGlobalChat: true,
+          messagesGGChat: true,
         },
       });
 
       res.json(getUpdatedGroup);
     }
+  }),
+];
+
+exports.group_join_users = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const joinGroup = await prisma.group.update({
+      where: {
+        id: id,
+      },
+      data: {
+        users: {
+          connect: [{ id: req.authData.id }],
+        },
+      },
+    });
+
+    const getUpdatedGroupWithNewUsers = await prisma.group.findFirst({
+      where: {
+        id: joinGroup.id,
+      },
+      include: {
+        users: true,
+        messagesGGChat: true,
+      },
+    });
+
+    res.json(getUpdatedGroupWithNewUsers);
   }),
 ];
 
@@ -313,7 +392,7 @@ exports.group_delete = [
       },
     });
 
-    const [groupImagesArray] = [checkIfGroupExists.messages];
+    const [groupImagesArray] = [checkIfGroupExists.messagesGGChat];
 
     async function loopArray(groupImagesArray) {
       groupImagesArray.forEach(async (img) => {

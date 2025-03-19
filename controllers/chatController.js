@@ -96,6 +96,10 @@ exports.chats_get = [
   verifyToken,
   asyncHandler(async (req, res, next) => {
     const getChats = await prisma.chat.findMany({
+      where: {
+        senderChatId: req.authData.id,
+      },
+
       include: {
         senderChat: true,
         receiverChat: true,

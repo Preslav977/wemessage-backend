@@ -350,6 +350,8 @@ exports.user_search = [
   asyncHandler(async (req, res, next) => {
     const { query } = req.query;
 
+    console.log(query);
+
     const searchForUser =
       await prisma.$queryRaw`SELECT * FROM "user" WHERE first_name ILIKE CONCAT('%', ${query}, '%') OR last_name ILIKE CONCAT('%', ${query}, '%') OR username ILIKE CONCAT('%', ${query}, '%')`;
 

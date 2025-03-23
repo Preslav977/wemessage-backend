@@ -43,6 +43,8 @@ model User {
   messagesGGChat     MessageGroupGlobalChat[]
   group              Group?                   @relation(fields: [groupId], references: [id])
   groupId            String?
+  globalChat         GlobalChat?              @relation(fields: [globalChatId], references: [id])
+  globalChatId       String?
 
   @@map("user")
 }
@@ -78,18 +80,20 @@ model Message {
 }
 
 model MessageGroupGlobalChat {
-  id                Int      @id @default(autoincrement())
+  id                Int         @id @default(autoincrement())
   message_text      String
   message_imageName String
   message_imageURL  String
   message_imageType String
   message_imageSize Int
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
   userId            Int
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group             Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group             Group?      @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId           String?
+  globalChat        GlobalChat? @relation(fields: [globalChatId], references: [id])
+  globalChatId      String?
 
   @@map("messageGGChat")
 }
@@ -103,6 +107,14 @@ model Group {
   messagesGGChat  MessageGroupGlobalChat[]
 
   @@map("group")
+}
+
+model GlobalChat {
+  id             String                   @id @default(uuid())
+  users          User[]
+  messagesGGChat MessageGroupGlobalChat[]
+
+  @@map("globalChat")
 }
 
 model Session {

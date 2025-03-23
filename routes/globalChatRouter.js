@@ -26,3 +26,5 @@ globalChatRouter.delete(
   "/:id/message",
   globalChatController.delete_message_globalChat
 );
+
+module.exports = globalChatRouter;

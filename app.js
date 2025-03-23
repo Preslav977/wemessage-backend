@@ -26,6 +26,8 @@ const chatRouter = require("./routes/chatRouter");
 
 const groupRouter = require("./routes/groupRouter");
 
+const globalChatRouter = require("./routes/globalChatRouter");
+
 const asyncHandler = require("express-async-handler");
 
 const verifyToken = require("./middleware/verifyToken");
@@ -152,6 +154,8 @@ app.use("/users", userRouter);
 app.use("/chats", chatRouter);
 
 app.use("/groups", groupRouter);
+
+app.use("/globalChat", globalChatRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

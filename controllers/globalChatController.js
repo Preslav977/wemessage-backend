@@ -23,6 +23,24 @@ exports.create_globalChat = [
   asyncHandler(async (req, res, next) => {
     const { userId } = req.body;
 
-    // const createGlobalChat = await prisma.
+    const createGlobalChat = await prisma.globalChat.create({
+      data: {
+        users: {
+          connect: [{ id: req.authData.id }, { id: Number(userId) }],
+        },
+      },
+    });
+
+    const getCreatedGlobalChat = await prisma.globalChat.findFirst({
+      where: {
+        id: createGlobalChat.id,
+      },
+      include: {
+        users: true,
+        messagesGGChat: true,
+      },
+    });
+
+    res.json(getCreatedGlobalChat);
   }),
 ];

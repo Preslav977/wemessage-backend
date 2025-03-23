@@ -6,7 +6,7 @@ const globalChatController = require("../controllers/globalChatController");
 
 globalChatRouter.post("/", globalChatController.create_globalChat);
 
-// globalChatRouter.get("/:id", globalChatController.get_globalChat_by_id);
+globalChatRouter.get("/:id", globalChatController.get_globalChat_by_id);
 
 // globalChatRouter.post(
 //   "/:id/message",

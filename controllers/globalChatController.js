@@ -44,3 +44,22 @@ exports.create_globalChat = [
     res.json(getCreatedGlobalChat);
   }),
 ];
+
+exports.get_globalChat_by_id = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const findGlobalChatById = await prisma.globalChat.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        users: true,
+        messagesGGChat: true,
+      },
+    });
+
+    res.json(findGlobalChatById);
+  }),
+];

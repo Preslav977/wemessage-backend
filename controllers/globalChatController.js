@@ -104,3 +104,102 @@ exports.send_message_globalChat = [
     }
   }),
 ];
+
+let cloudinaryGlobalChatResponse;
+
+exports.send_image_globalChat = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    try {
+      await runMiddleware(req, res, multerFileUploadMiddleware);
+
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+      cloudinaryGlobalChatResponse = await handleFileUpload(
+        dataURI,
+        req.file.originalname
+      );
+
+      next();
+    } catch (error) {
+      res.json(error.message);
+    }
+  }),
+  validateImage,
+  async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id } = req.params;
+
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      await prisma.messageGroupGlobalChat.create({
+        data: {
+          message_text: "",
+          message_imageName: req.file.originalname,
+          message_imageURL: cloudinaryGlobalChatResponse.secure_url,
+          message_imageType: req.file.mimetype,
+          message_imageSize: req.file.size,
+          createdAt: new Date(),
+          userId: req.authData.id,
+          globalChatId: id,
+        },
+      });
+
+      const getGlobalChatWithSendImages = await prisma.globalChat.findFirst({
+        where: {
+          id: id,
+        },
+        include: {
+          users: true,
+          messagesGGChat: true,
+        },
+      });
+
+      res.json(getGlobalChatWithSendImages);
+    }
+  },
+];
+
+exports.edit_message_globalChat = [
+  verifyToken,
+  validateMessage,
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id, messageId } = req.params;
+
+    const { message_text } = req.body;
+
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      await prisma.messageGroupGlobalChat.update({
+        where: {
+          id: Number(messageId),
+          globalChatId: id,
+        },
+        data: {
+          message_text: message_text,
+          updatedAt: new Date(),
+        },
+      });
+
+      const getGlobalChatWithUpdatedMessages =
+        await prisma.globalChat.findFirst({
+          where: {
+            id: id,
+          },
+          include: {
+            users: true,
+            messagesGGChat: true,
+          },
+        });
+
+      res.json(getGlobalChatWithUpdatedMessages);
+    }
+  }),
+];

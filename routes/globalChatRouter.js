@@ -13,12 +13,12 @@ globalChatRouter.post(
   globalChatController.send_message_globalChat
 );
 
-// globalChatRouter.post("/:id/image", globalChatController.send_image_globalChat);
+globalChatRouter.post("/:id/image", globalChatController.send_image_globalChat);
 
-// globalChatRouter.put(
-//   "/:id/message",
-//   globalChatController.edit_message_globalChat
-// );
+globalChatRouter.put(
+  "/:id/message/:messageId",
+  globalChatController.edit_message_globalChat
+);
 
 // globalChatRouter.put("/:id/join", globalChatController.join_globalChat);
 

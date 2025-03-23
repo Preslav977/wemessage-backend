@@ -203,3 +203,33 @@ exports.edit_message_globalChat = [
     }
   }),
 ];
+
+exports.join_globalChat = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const joinGlobalChat = await prisma.globalChat.update({
+      where: {
+        id: id,
+      },
+      data: {
+        users: {
+          connect: [{ id: req.authData.id }],
+        },
+      },
+    });
+
+    const getUpdatedGlobalChatWithNewUsers = await prisma.globalChat.findFirst({
+      where: {
+        id: joinGlobalChat.id,
+      },
+      include: {
+        users: true,
+        messagesGGChat: true,
+      },
+    });
+
+    res.json(getUpdatedGlobalChatWithNewUsers);
+  }),
+];

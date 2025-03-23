@@ -20,7 +20,7 @@ globalChatRouter.put(
   globalChatController.edit_message_globalChat
 );
 
-// globalChatRouter.put("/:id/join", globalChatController.join_globalChat);
+globalChatRouter.put("/:id/join", globalChatController.join_globalChat);
 
 // globalChatRouter.delete(
 //   "/:id/message",

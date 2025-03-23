@@ -22,9 +22,9 @@ globalChatRouter.put(
 
 globalChatRouter.put("/:id/join", globalChatController.join_globalChat);
 
-// globalChatRouter.delete(
-//   "/:id/message",
-//   globalChatController.delete_message_globalChat
-// );
+globalChatRouter.delete(
+  "/:id/message/:messageId",
+  globalChatController.delete_message_globalChat
+);
 
 module.exports = globalChatRouter;

@@ -10,6 +10,8 @@ const prisma = require("../db/client");
 
 const upload = require("../middleware/multer");
 
+const cloudinary = require("cloudinary").v2;
+
 const handleFileUpload = require("../middleware/handleFileUpload");
 
 const runMiddleware = require("../middleware/runMiddleware");
@@ -231,5 +233,41 @@ exports.join_globalChat = [
     });
 
     res.json(getUpdatedGlobalChatWithNewUsers);
+  }),
+];
+
+exports.delete_message_globalChat = [
+  verifyToken,
+  asyncHandler(async (req, res, next) => {
+    const { id, messageId } = req.params;
+
+    const deleteMessageInGlobalChat =
+      await prisma.messageGroupGlobalChat.delete({
+        where: {
+          id: Number(messageId),
+          userId: req.authData.id,
+          globalChatId: id,
+        },
+      });
+
+    if (deleteMessageInGlobalChat.message_imageURL !== "") {
+      const deleteImageFromCloudinary = await cloudinary.uploader.destroy(
+        `wemessage_images/${deleteMessageInGlobalChat.message_imageName}`
+      );
+
+      // console.log(deleteImageFromCloudinary);
+    }
+
+    const getGlobalChatWithDeletedMessages = await prisma.globalChat.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        users: true,
+        messagesGGChat: true,
+      },
+    });
+
+    res.json(getGlobalChatWithDeletedMessages);
   }),
 ];

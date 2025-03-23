@@ -321,11 +321,13 @@ exports.group_update = [
           },
         },
         where: {
+          id: id,
           OR: [
-            { role: "ADMIN" },
-            { id: id, group_creatorId: Number(group_creatorId) },
+            { group_creatorId: Number(group_creatorId) },
+            { users: { some: { role: "ADMIN" } } },
           ],
         },
+
         data: {
           group_name: group_name,
         },
@@ -383,11 +385,14 @@ exports.group_delete = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
+    const { group_creatorId } = req.body;
+
     const checkIfGroupExists = await prisma.group.findFirst({
       where: {
         id: id,
       },
       include: {
+        users: true,
         messagesGGChat: true,
       },
     });
@@ -405,14 +410,24 @@ exports.group_delete = [
     // console.log(loopArray(groupImagesArray));
 
     await prisma.group.delete({
+      select: {
+        users: {
+          include: true,
+        },
+      },
       where: {
         id: checkIfGroupExists.id,
+        OR: [
+          { group_creatorId: Number(group_creatorId) },
+          { users: { some: { role: "ADMIN" } } },
+        ],
       },
     });
 
     const getDeletedGroup = await prisma.group.findFirst({
       where: {
         id: checkIfGroupExists.id,
+        group_creatorId: Number(group_creatorId),
       },
       include: {
         users: true,

@@ -63,3 +63,44 @@ exports.get_globalChat_by_id = [
     res.json(findGlobalChatById);
   }),
 ];
+
+exports.send_message_globalChat = [
+  verifyToken,
+  validateMessage,
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    const { id } = req.params;
+
+    const { message_text } = req.body;
+
+    if (!errors.isEmpty()) {
+      res.status(400).send(errors.array());
+    } else {
+      await prisma.messageGroupGlobalChat.create({
+        data: {
+          message_text: message_text,
+          message_imageName: "",
+          message_imageURL: "",
+          message_imageType: "",
+          message_imageSize: 0,
+          createdAt: new Date(),
+          userId: req.authData.id,
+          globalChatId: id,
+        },
+      });
+
+      const getGlobalChatWithSendMessages = await prisma.globalChat.findFirst({
+        where: {
+          id: id,
+        },
+        include: {
+          users: true,
+          messagesGGChat: true,
+        },
+      });
+
+      res.json(getGlobalChatWithSendMessages);
+    }
+  }),
+];

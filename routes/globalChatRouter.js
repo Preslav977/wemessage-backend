@@ -8,10 +8,10 @@ globalChatRouter.post("/", globalChatController.create_globalChat);
 
 globalChatRouter.get("/:id", globalChatController.get_globalChat_by_id);
 
-// globalChatRouter.post(
-//   "/:id/message",
-//   globalChatController.send_message_globalChat
-// );
+globalChatRouter.post(
+  "/:id/message",
+  globalChatController.send_message_globalChat
+);
 
 // globalChatRouter.post("/:id/image", globalChatController.send_image_globalChat);
 

@@ -14,16 +14,16 @@ userRouter.post("/login_guest", userController.user_log_in_guest);
 
 userRouter.get("/search", userController.user_search);
 
-userRouter.get("/", userController.user_get_details);
-
 userRouter.get("/all", userController.user_get_all);
+
+userRouter.get("/:id", userController.user_get_by_id);
 
 userRouter.put(
   "/profile/background_image/:id",
   userController.user_update_background_image
 );
 
-userRouter.put("/profile/image/:id", userController.user_update_profile_image);
+userRouter.put("/profile_image/:id", userController.user_update_profile_image);
 
 userRouter.put("/profile/edit/:id", userController.user_update_profile);
 
@@ -32,6 +32,6 @@ userRouter.put(
   userController.user_update_passwords
 );
 
-userRouter.get("/:id", userController.user_get_by_id);
+userRouter.get("/", userController.user_get_details);
 
 module.exports = userRouter;

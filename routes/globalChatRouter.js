@@ -4,8 +4,6 @@ const globalChatRouter = Router();
 
 const globalChatController = require("../controllers/globalChatController");
 
-globalChatRouter.post("/", globalChatController.create_globalChat);
-
 globalChatRouter.get("/:id", globalChatController.get_globalChat_by_id);
 
 globalChatRouter.post(
@@ -26,5 +24,7 @@ globalChatRouter.delete(
   "/:id/message/:messageId",
   globalChatController.delete_message_globalChat
 );
+
+globalChatRouter.post("/", globalChatController.create_globalChat);
 
 module.exports = globalChatRouter;

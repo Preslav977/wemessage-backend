@@ -97,7 +97,12 @@ exports.chats_get = [
   asyncHandler(async (req, res, next) => {
     const getChats = await prisma.chat.findMany({
       where: {
-        senderChatId: req.authData.id,
+        OR: [
+          { senderChatId: req.authData.id },
+          { receiverChatId: req.authData.id },
+          { senderChat: { role: "ADMIN" } },
+          { receiverChat: { role: "ADMIN" } },
+        ],
       },
 
       include: {

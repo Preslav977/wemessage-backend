@@ -9,91 +9,120 @@ const app = require("../app");
 app.use("/", chatRouter);
 
 describe("testing chats controllers and routes", (done) => {
-  let userOne;
-
-  let userTwo;
-
-  let getToken;
-
   beforeAll(async () => {
     await prisma.$connect();
-
-    userOne = await request(app).post("/users/signup").send({
-      first_name: "newuser",
-      last_name: "newuser",
-      username: "newuser",
-      password: "12345678Bg@",
-      confirm_password: "12345678Bg@",
-      bio: "",
-      profile_picture: "",
-      background_picture: "",
-    });
-
-    userTwo = await request(app).post("/users/signup").send({
-      first_name: "newuser1",
-      last_name: "newuser1",
-      username: "newuser1",
-      password: "12345678Bg@",
-      confirm_password: "12345678Bg@",
-      bio: "",
-      profile_picture: "",
-      background_picture: "",
-    });
-
-    const logInGetToken = await request(app).post("/users/login").send({
-      username: "newuser",
-      password: "12345678Bg@",
-    });
-
-    getToken = logInGetToken.body.token;
   });
 
   afterAll(async () => {
     await prisma.$disconnect();
 
+    await prisma.user.deleteMany();
+
     await prisma.chat.deleteMany();
 
     await prisma.message.deleteMany();
-
-    await prisma.user.deleteMany();
 
     done;
   });
 
   describe("[POST] /chats", () => {
     it("should respond with 200 if chat is started between 2 users", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "newuser",
+          last_name: "newuser",
+          username: "newuser",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "newuser1",
+          last_name: "newuser1",
+          username: "newuser1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "newuser",
+        password: "12345678Bg@",
+      });
+
+      const senderId = registeredSenderUser._body.id;
+
+      const receiverId = registeredReceiverUser._body.id;
+
+      const { token } = logInRegisteredUser._body;
 
       const { body, status } = await request(app)
         .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
+        .send({ senderId, receiverId })
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(200);
 
-      expect(body.createChat.id).toBe(body.createChat.id);
+      expect(body.id).toBe(body.id);
 
-      expect(body.createChat.groupId).toBe(null);
+      expect(body.senderChat).not.toBe(null);
+
+      expect(body.receiverChat).not.toBe(null);
     });
 
     it("should respond with 200 when user sends a message", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user",
+          last_name: "user",
+          username: "user",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user1",
+          last_name: "user1",
+          username: "user1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "user",
+        password: "12345678Bg@",
+      });
 
-      const { body } = await request(app)
+      const senderId = registeredSenderUser._body.id;
+
+      const receiverId = registeredReceiverUser._body.id;
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body, status } = await request(app)
         .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
+        .send({ senderId, receiverId })
         .set("Authorization", `Bearer ${token}`);
 
-      response = await request(app)
-        .post(`/chats/${body.createChat.id}/message`)
+      const response = await request(app)
+        .post(`/chats/${body.id}/message`)
         .send({
           message_text: "hello",
           message_imageName: "",
@@ -101,287 +130,542 @@ describe("testing chats controllers and routes", (done) => {
           message_imageType: "",
           message_imageSize: 0,
           createdAt: new Date(),
-          userId: userOneId,
-          chatId: `${body.createChat.id}`,
+          receiverId: receiverId,
+          chatId: `${body.id}`,
         })
+
         .set("Authorization", `Bearer ${token}`);
-
-      expect(response.body.sendMessageInChat.message_text).toBe("hello");
-
-      expect(response.body.sendMessageInChat.message_imageName).toBe("");
-
-      expect(response.body.sendMessageInChat.message_imageURL).toBe("");
-
-      expect(response.body.sendMessageInChat.message_imageType).toBe("");
-
-      expect(response.body.sendMessageInChat.message_imageSize).toBe(0);
-
-      expect(response.body.sendMessageInChat.createdAt).toBe(
-        response.body.sendMessageInChat.createdAt
-      );
-      expect(response.body.sendMessageInChat.userId).toBe(
-        response.body.sendMessageInChat.userId
-      );
-
-      expect(response.body.sendMessageInChat.chatId).toBe(
-        response.body.sendMessageInChat.chatId
-      );
-    });
-
-    it("should response with 200 when user sends a image in chat", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      app.use("/chats", chatRouter);
-
-      response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const { body, status } = await request(app)
-        .post(`/chats/${response.body.createChat.id}/image`)
-
-        .set("Authorization", `Bearer ${token}`)
-
-        .attach("file", "public/Screenshot_2025-01-09_12-31-20.png");
 
       expect(status).toBe(200);
 
-      expect(body.sendImageInChat.message_text).toBe("");
+      expect(response.body.messages[0].message_text).toBe("hello");
 
-      expect(body.sendImageInChat.message_imageName).toBe(
-        "Screenshot_2025-01-09_12-31-20.png"
+      expect(response.body.messages[0].message_imageName).toBe("");
+
+      expect(response.body.messages[0].message_imageURL).toBe("");
+
+      expect(response.body.messages[0].message_imageType).toBe("");
+
+      expect(response.body.messages[0].message_imageSize).toBe(0);
+
+      expect(response.body.messages[0].createdAt).toBe(
+        response.body.messages[0].createdAt
       );
 
-      expect(body.sendImageInChat.message_imageURL).toEqual(
-        "https://res.cloudinary.com/dsofl9wku/image/upload/v1736579322/wemessage_images/Screenshot_2025-01-09_12-31-20.png.png"
+      expect(response.body.receiverMessageId).toBe(
+        response.body.receiverMessageId
       );
 
-      expect(body.sendImageInChat.message_imageSize).toBe(116383);
+      expect(response.body.senderMessageId).toBe(response.body.senderMessageId);
 
-      expect(body.sendImageInChat.createdAt).toBe(
-        body.sendImageInChat.createdAt
-      );
+      expect(response.body.chatId).toBe(response.body.chatId);
+    });
 
-      expect(body.sendImageInChat.updateAt).toBe(body.sendImageInChat.updateAt);
+    it("should response with 200 when user sends a image in chat", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user12",
+          last_name: "user12",
+          username: "user12",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      expect(body.sendImageInChat.userId).toBe(body.sendImageInChat.userId);
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user23",
+          last_name: "user23",
+          username: "user23",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      expect(body.sendImageInChat.chatId).toBe(body.sendImageInChat.chatId);
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "user12",
+        password: "12345678Bg@",
+      });
 
-      expect(body.sendImageInChat.groupId).toBe(null);
+      const senderId = registeredSenderUser._body.id;
+
+      const receiverId = registeredReceiverUser._body.id;
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body } = await request(app)
+        .post("/chats")
+        .send({ senderId, receiverId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const response = await request(app)
+        .post(`/chats/${body.id}/image`)
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("receiverId", receiverId)
+
+        .attach("file", "public/image.png");
+
+      const message = response.body.messages[0];
+
+      expect(response.status).toBe(200);
+
+      expect(message.message_text).toBe("");
+
+      expect(message.message_imageName).toBe(message.message_imageName);
+
+      expect(message.message_imageURL).toEqual(message.message_imageURL);
+
+      expect(message.message_imageSize).toBe(message.message_imageSize);
+
+      expect(message.createdAt).toBe(message.createdAt);
+
+      expect(message.updateAt).toBe(message.updateAt);
+
+      expect(message.senderMessageId).toBe(message.senderMessageId);
+
+      expect(message.receiverMessageId).toBe(message.receiverMessageId);
+
+      expect(message.groupId).toBe(message.groupId);
+    });
+
+    it("should respond with message if you don't upload an image", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user123",
+          last_name: "user123",
+          username: "user123",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user234",
+          last_name: "user234",
+          username: "user234",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "user123",
+        password: "12345678Bg@",
+      });
+
+      const senderId = registeredSenderUser._body.id;
+
+      const receiverId = registeredReceiverUser._body.id;
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body } = await request(app)
+        .post("/chats")
+        .send({ senderId, receiverId })
+        .set("Authorization", `Bearer ${token}`);
+
+      const response = await request(app)
+        .post(`/chats/${body.id}/image`)
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("receiverId", receiverId)
+
+        .attach("file", "public/document.txt");
+
+      expect(response._body).toEqual("An unknown file format not allowed");
     });
 
     it("should respond with 400 if the image is too big", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user1234",
+          last_name: "user1234",
+          username: "user1234",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "user2345",
+          last_name: "user2345",
+          username: "user2345",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "user1234",
+        password: "12345678Bg@",
+      });
 
-      response = await request(app)
+      const senderId = registeredSenderUser._body.id;
+
+      const receiverId = registeredReceiverUser._body.id;
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body } = await request(app)
         .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
+        .send({ senderId, receiverId })
         .set("Authorization", `Bearer ${token}`);
 
-      const { body, status } = await request(app)
-        .post(`/chats/${response.body.createChat.id}/image`)
+      const response = await request(app)
+        .post(`/chats/${body.id}/image`)
 
         .set("Authorization", `Bearer ${token}`)
+
+        .field("receiverId", receiverId)
 
         .attach("file", "public/Teruel.jpg");
 
-      expect(body[0].msg).toBe("Image size exceed 5 MB");
+      expect(response.status).toBe(400);
 
-      expect(status).toBe(400);
+      expect(response._body[0].msg).toBe("Image size exceed 5 MB");
     }, 10000);
-
-    it("should respond with message if you dont upload an image", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const { body } = await request(app)
-        .post(`/chats/${response.body.createChat.id}/image`)
-
-        .set("Authorization", `Bearer ${token}`)
-
-        .attach("file", "public/Plain Text.txt");
-
-      expect(body).toEqual("An unknown file format not allowed");
-    });
 
     describe("[GET] /chats", () => {
       it("should respond with 200 and chat information", async () => {
-        const userOneId = userOne.body.signUpAndCreateUser.id;
+        const registeredSenderUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "testuser",
+            last_name: "testuser",
+            username: "testuser",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const userTwoId = userTwo.body.signUpAndCreateUser.id;
+        const registeredReceiverUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "testuser1",
+            last_name: "testuser1",
+            username: "testuser1",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const token = getToken;
+        const logInRegisteredUser = await request(app)
+          .post("/users/login")
+          .send({
+            username: "testuser",
+            password: "12345678Bg@",
+          });
 
-        app.use("/chats", chatRouter);
+        const senderId = registeredSenderUser._body.id;
 
-        response = await request(app)
+        const receiverId = registeredReceiverUser._body.id;
+
+        const { token } = logInRegisteredUser._body;
+
+        const { body } = await request(app)
           .post("/chats")
-          .send({ id: userOneId, id: userTwoId })
+          .send({ senderId, receiverId })
           .set("Authorization", `Bearer ${token}`);
 
-        const { body, status } = await request(app)
-          .get(`/chats/${response.body.createChat.id}`)
+        const response = await request(app)
+          .get(`/chats/${body.id}`)
           .set("Authorization", `Bearer ${token}`);
 
-        expect(status).toBe(200);
+        // console.log(response);
 
-        expect(body.findChatById.users[0].first_name).toEqual("newuser1");
+        const { senderChat } = response._body;
 
-        expect(body.findChatById.users[0].last_name).toEqual("newuser1");
+        const { receiverChat } = response._body;
 
-        expect(body.findChatById.users[0].username).toEqual("newuser1");
+        // console.log(senderChat, receiverChat);
 
-        expect(body.findChatById.users[0].password).toEqual(
-          body.findChatById.users[0].password
+        expect(response.status).toBe(200);
+
+        expect(senderChat.id).toBe(senderChat.id);
+
+        expect(senderChat.first_name).toBe("testuser");
+
+        expect(senderChat.last_name).toBe("testuser");
+
+        expect(senderChat.username).toBe("testuser");
+
+        expect(senderChat.password).toBe(senderChat.password);
+
+        expect(senderChat.confirm_password).toBe(senderChat.confirm_password);
+
+        expect(senderChat.bio).toBe("");
+
+        expect(senderChat.profile_picture).toBe("");
+
+        expect(senderChat.background_picture).toBe("");
+
+        expect(senderChat.online_presence).toBe("ONLINE");
+
+        expect(senderChat.role).toBe("USER");
+
+        expect(senderChat.groupId).toBe(null);
+
+        expect(senderChat.globalChatId).toBe(null);
+
+        expect(receiverChat.id).toBe(receiverChat.id);
+
+        expect(receiverChat.first_name).toBe("testuser1");
+
+        expect(receiverChat.last_name).toBe("testuser1");
+
+        expect(receiverChat.username).toBe("testuser1");
+
+        expect(receiverChat.password).toBe(receiverChat.password);
+
+        expect(receiverChat.confirm_password).toBe(
+          receiverChat.confirm_password
         );
 
-        expect(body.findChatById.users[0].confirm_password).toEqual(
-          body.findChatById.users[0].confirm_password
-        );
+        expect(receiverChat.bio).toBe("");
 
-        expect(body.findChatById.users[0].bio).toBe("");
+        expect(receiverChat.profile_picture).toBe("");
 
-        expect(body.findChatById.users[0].profile_picture).toBe("");
+        expect(receiverChat.background_picture).toBe("");
 
-        expect(body.findChatById.users[0].online_presence).toBe("OFFLINE");
+        expect(receiverChat.online_presence).toBe("OFFLINE");
 
-        expect(body.findChatById.users[0].role).toBe("USER");
+        expect(receiverChat.role).toBe("USER");
 
-        expect(body.findChatById.users[0].groupId).toBe(null);
+        expect(receiverChat.groupId).toBe(null);
 
-        expect(body.findChatById.users[1].first_name).toEqual("newuser");
-
-        expect(body.findChatById.users[1].last_name).toEqual("newuser");
-
-        expect(body.findChatById.users[1].username).toEqual("newuser");
-
-        expect(body.findChatById.users[1].password).toEqual(
-          body.findChatById.users[1].password
-        );
-
-        expect(body.findChatById.users[1].confirm_password).toEqual(
-          body.findChatById.users[1].confirm_password
-        );
-
-        expect(body.findChatById.users[1].bio).toBe("");
-
-        expect(body.findChatById.users[1].profile_picture).toBe("");
-
-        expect(body.findChatById.users[1].online_presence).toBe("ONLINE");
-
-        expect(body.findChatById.users[1].role).toBe("USER");
-
-        expect(body.findChatById.users[1].groupId).toBe(null);
-
-        expect(body.findChatById.messages).toEqual([]);
+        expect(receiverChat.globalChatId).toBe(null);
       });
 
       it("should respond with 200 when getting all chats information", async () => {
-        const userOneId = userOne.body.signUpAndCreateUser.id;
+        const registeredSenderUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "testuser2",
+            last_name: "testuser2",
+            username: "testuser2",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const userTwoId = userTwo.body.signUpAndCreateUser.id;
+        const registeredReceiverUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "testuser3",
+            last_name: "testuser3",
+            username: "testuser3",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const token = getToken;
+        const logInRegisteredUser = await request(app)
+          .post("/users/login")
+          .send({
+            username: "testuser3",
+            password: "12345678Bg@",
+          });
 
-        app.use("/chats", chatRouter);
+        const senderId = registeredSenderUser._body.id;
 
-        response = await request(app)
+        const receiverId = registeredReceiverUser._body.id;
+
+        const { token } = logInRegisteredUser._body;
+
+        await request(app)
           .post("/chats")
-          .send({ id: userOneId, id: userTwoId })
+          .send({ senderId, receiverId })
           .set("Authorization", `Bearer ${token}`);
 
-        const { body, status } = await request(app)
-          .get(`/chats/`)
+        const response = await request(app)
+          .get("/chats")
           .set("Authorization", `Bearer ${token}`);
 
-        body.getChats.map((chats) => {
+        // console.log(response);
+
+        response.body.map((chats) => {
           expect(chats.id).toEqual(chats.id);
 
-          expect(chats.groupId).toEqual(null);
+          expect(chats.senderChat.id).toBe(chats.senderChat.id);
 
-          expect(chats.users[0].first_name).toEqual(chats.users[0].first_name);
+          expect(chats.senderChat.first_name).toBe(chats.senderChat.first_name);
 
-          expect(chats.users[0].last_name).toEqual(chats.users[0].last_name);
+          expect(chats.senderChat.last_name).toBe(chats.senderChat.last_name);
 
-          expect(chats.users[0].username).toEqual(chats.users[0].username);
+          expect(chats.senderChat.username).toBe(chats.senderChat.username);
 
-          expect(chats.users[0].password).toEqual(chats.users[0].password);
+          expect(chats.senderChat.password).toBe(chats.senderChat.password);
 
-          expect(chats.users[0].confirm_password).toEqual(
-            chats.users[0].confirm_password
+          expect(chats.senderChat.confirm_password).toBe(
+            chats.senderChat.confirm_password
           );
 
-          expect(chats.users[0].bio).toEqual(chats.users[0].bio);
+          expect(chats.senderChat.bio).toBe(chats.senderChat.bio);
 
-          expect(chats.users[0].profile_picture).toEqual(
-            chats.users[0].profile_picture
+          expect(chats.senderChat.profile_picture).toBe(
+            chats.senderChat.profile_picture
           );
 
-          expect(chats.users[0].background_picture).toEqual(
-            chats.users[0].background_picture
+          expect(chats.senderChat.background_picture).toBe(
+            chats.senderChat.background_picture
           );
 
-          expect(chats.users[0].online_presence).toEqual(
-            chats.users[0].online_presence
+          expect(chats.senderChat.online_presence).toBe(
+            chats.senderChat.online_presence
           );
 
-          expect(chats.users[0].role).toEqual(chats.users[0].role);
+          expect(chats.senderChat.role).toBe(chats.senderChat.role);
 
-          expect(chats.users[0].groupId).toEqual(chats.users[0].groupId);
+          expect(chats.senderChat.groupId).toBe(chats.senderChat.groupId);
+
+          expect(chats.senderChat.globalChatId).toBe(
+            chats.senderChat.globalChatId
+          );
+
+          expect(chats.receiverChat.id).toBe(chats.receiverChat.id);
+
+          expect(chats.receiverChat.first_name).toBe(
+            chats.receiverChat.first_name
+          );
+
+          expect(chats.receiverChat.last_name).toBe(
+            chats.receiverChat.last_name
+          );
+
+          expect(chats.receiverChat.username).toBe(chats.receiverChat.username);
+
+          expect(chats.receiverChat.password).toBe(chats.receiverChat.password);
+
+          expect(chats.receiverChat.confirm_password).toBe(
+            chats.receiverChat.confirm_password
+          );
+
+          expect(chats.receiverChat.bio).toBe(chats.receiverChat.bio);
+
+          expect(chats.receiverChat.profile_picture).toBe(
+            chats.receiverChat.profile_picture
+          );
+
+          expect(chats.receiverChat.background_picture).toBe(
+            chats.receiverChat.background_picture
+          );
+
+          expect(chats.receiverChat.online_presence).toBe(
+            chats.receiverChat.online_presence
+          );
+
+          expect(chats.receiverChat.role).toBe(chats.receiverChat.role);
+
+          expect(chats.receiverChat.groupId).toBe(chats.receiverChat.groupId);
+
+          expect(chats.receiverChat.globalChatId).toBe(
+            chats.receiverChat.globalChatId
+          );
         });
       });
     });
+
     describe("[PUT] /chats", () => {
       it("should respond with 200 when the image is being edited", async () => {
-        const userOneId = userOne.body.signUpAndCreateUser.id;
+        const registeredSenderUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "randomuser",
+            last_name: "urandomuserser",
+            username: "randomuser",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const userTwoId = userTwo.body.signUpAndCreateUser.id;
+        const registeredReceiverUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "randomuser1",
+            last_name: "randomuser1",
+            username: "randomuser1",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const token = getToken;
-        app.use("/chats", chatRouter);
+        const logInRegisteredUser = await request(app)
+          .post("/users/login")
+          .send({
+            username: "randomuser",
+            password: "12345678Bg@",
+          });
 
-        let startConversation = await request(app)
+        const senderId = registeredSenderUser._body.id;
+
+        const receiverId = registeredReceiverUser._body.id;
+
+        const { token } = logInRegisteredUser._body;
+
+        const { body } = await request(app)
           .post("/chats")
-          .send({ id: userOneId, id: userTwoId })
+          .send({ senderId, receiverId })
           .set("Authorization", `Bearer ${token}`);
 
-        response = await request(app)
-          .post(`/chats/${startConversation.body.createChat.id}/message`)
+        const response = await request(app)
+          .post(`/chats/${body.id}/message`)
           .send({
-            message_text: "hello, people",
+            message_text: "hello",
             message_imageName: "",
             message_imageURL: "",
             message_imageType: "",
             message_imageSize: 0,
             createdAt: new Date(),
-            userId: userOneId,
-            chatId: `${startConversation.body.createChat.id}`,
+            receiverId: receiverId,
+            chatId: `${body.id}`,
           })
+
           .set("Authorization", `Bearer ${token}`);
 
-        const conversationId = startConversation.body.createChat.id;
+        const conversationId = body.id;
 
-        const messageId = response.body.sendMessageInChat.id;
+        // console.log(response);
 
-        const { body, status } = await request(app)
+        const messageId = response.body.messages[0].id;
+
+        // console.log(conversationId, messageId);
+
+        const editedMessageResponse = await request(app)
           .put(`/chats/${conversationId}/message/${messageId}`)
           .send({
             message_text: "bye, people",
@@ -389,77 +673,111 @@ describe("testing chats controllers and routes", (done) => {
           })
           .set("Authorization", `Bearer ${token}`);
 
-        expect(status).toBe(200);
+        const message = editedMessageResponse.body.messages[0];
 
-        expect(body.editMessageInChat.message_text).toEqual("bye, people");
+        expect(editedMessageResponse.status).toBe(200);
 
-        expect(body.editMessageInChat.message_imageName).toEqual("");
+        expect(message.message_text).toEqual("bye, people");
 
-        expect(body.editMessageInChat.message_imageURL).toEqual("");
+        expect(message.message_imageName).toEqual("");
 
-        expect(body.editMessageInChat.message_imageType).toEqual("");
+        expect(message.message_imageURL).toEqual("");
 
-        expect(body.editMessageInChat.message_imageSize).toBe(0);
+        expect(message.message_imageType).toEqual("");
 
-        expect(body.editMessageInChat.createdAt).toEqual(
-          body.editMessageInChat.createdAt
-        );
+        expect(message.message_imageSize).toBe(0);
 
-        expect(body.editMessageInChat.updatedAt).toEqual(
-          body.editMessageInChat.updatedAt
-        );
+        expect(message.createdAt).toEqual(message.createdAt);
 
-        expect(body.editMessageInChat.userId).toEqual(
-          body.editMessageInChat.userId
-        );
+        expect(message.updatedAt).toEqual(message.updatedAt);
 
-        expect(body.editMessageInChat.chatId).toEqual(
-          body.editMessageInChat.chatId
-        );
+        expect(message.userId).toEqual(message.userId);
 
-        expect(body.editMessageInChat.groupId).toBe(null);
+        expect(message.receiverId).toEqual(message.receiverId);
+
+        expect(message.senderId).toEqual(message.senderId);
+
+        expect(message.chatId).toEqual(message.chatId);
       });
     });
+
     describe("[DELETE] /chats", () => {
       it("should respond with message if message is being deleted", async () => {
-        const userOneId = userOne.body.signUpAndCreateUser.id;
+        const registeredSenderUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "randomuser123",
+            last_name: "urandomuserser123",
+            username: "randomuser123",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const userTwoId = userTwo.body.signUpAndCreateUser.id;
+        const registeredReceiverUser = await request(app)
+          .post("/users/signup")
+          .send({
+            first_name: "randomuser456",
+            last_name: "randomuser456",
+            username: "randomuser456",
+            password: "12345678Bg@",
+            confirm_password: "12345678Bg@",
+            bio: "",
+            profile_picture: "",
+            background_picture: "",
+          });
 
-        const token = getToken;
+        const logInRegisteredUser = await request(app)
+          .post("/users/login")
+          .send({
+            username: "randomuser123",
+            password: "12345678Bg@",
+          });
 
-        app.use("/chats", chatRouter);
+        const senderId = registeredSenderUser._body.id;
 
-        const startConversation = await request(app)
+        const receiverId = registeredReceiverUser._body.id;
+
+        const { token } = logInRegisteredUser._body;
+
+        const { body } = await request(app)
           .post("/chats")
-          .send({ id: userOneId, id: userTwoId })
+          .send({ senderId, receiverId })
           .set("Authorization", `Bearer ${token}`);
 
-        const sendMessage = await request(app)
-          .post(`/chats/${startConversation.body.createChat.id}/message`)
+        const response = await request(app)
+          .post(`/chats/${body.id}/message`)
           .send({
-            message_text: "helloooo",
+            message_text: "hello",
             message_imageName: "",
             message_imageURL: "",
             message_imageType: "",
             message_imageSize: 0,
             createdAt: new Date(),
-            userId: userOneId,
-            chatId: `${startConversation.body.createChat.id}`,
+            receiverId: receiverId,
+            chatId: `${body.id}`,
           })
+
           .set("Authorization", `Bearer ${token}`);
 
-        const conversationId = startConversation.body.createChat.id;
+        const conversationId = body.id;
 
-        const messageId = sendMessage.body.sendMessageInChat.id;
+        // console.log(response);
 
-        const { body, status } = await request(app)
+        const messageId = response.body.messages[0].id;
+
+        // console.log(conversationId, messageId);
+
+        const deletedMessageResponse = await request(app)
           .delete(`/chats/${conversationId}/message/${messageId}`)
+
           .set("Authorization", `Bearer ${token}`);
 
-        expect(body.message).toEqual("Message has been deleted.");
+        expect(deletedMessageResponse.status).toBe(200);
 
-        expect(status).toBe(200);
+        expect(deletedMessageResponse.body.messages).toEqual([]);
       });
     });
   });

@@ -464,68 +464,68 @@ describe("testing groups controllers and routes", (done) => {
       expect(response.body).toEqual("An unknown file format not allowed");
     });
 
-    //   it("should respond with 400 if image is too big", async () => {
-    //     const registeredSenderUser = await request(app)
-    //       .post("/users/signup")
-    //       .send({
-    //         first_name: "useRr",
-    //         last_name: "useRr",
-    //         username: "useRr",
-    //         password: "12345678Bg@",
-    //         confirm_password: "12345678Bg@",
-    //         bio: "",
-    //         profile_picture: "",
-    //         background_picture: "",
-    //       });
+    it("should respond with 400 if image is too big", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "useRr",
+          last_name: "useRr",
+          username: "useRr",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-    //     const registeredReceiverUser = await request(app)
-    //       .post("/users/signup")
-    //       .send({
-    //         first_name: "useRr1",
-    //         last_name: "useRr1",
-    //         username: "useRr1",
-    //         password: "12345678Bg@",
-    //         confirm_password: "12345678Bg@",
-    //         bio: "",
-    //         profile_picture: "",
-    //         background_picture: "",
-    //       });
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "useRr1",
+          last_name: "useRr1",
+          username: "useRr1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-    //     const logInRegisteredUser = await request(app).post("/users/login").send({
-    //       username: "useRr",
-    //       password: "12345678Bg@",
-    //     });
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "useRr",
+        password: "12345678Bg@",
+      });
 
-    //     const { token } = logInRegisteredUser._body;
+      const { token } = logInRegisteredUser._body;
 
-    //     const { body } = await request(app)
-    //       .post("/groups")
+      const { body } = await request(app)
+        .post("/groups")
 
-    //       .set("Authorization", `Bearer ${token}`)
+        .set("Authorization", `Bearer ${token}`)
 
-    //       .field("group_name", "le group")
+        .field("group_name", "le group")
 
-    //       .field("group_creatorId", registeredSenderUser._body.id)
+        .field("group_creatorId", registeredSenderUser._body.id)
 
-    //       .field("userId", registeredReceiverUser._body.id)
+        .field("userId", registeredReceiverUser._body.id)
 
-    //       .attach("file", "public/image.png");
+        .attach("file", "public/image.png");
 
-    //     const groupId = body.id;
+      const groupId = body.id;
 
-    //     const response = await request(app)
-    //       .post(`/groups/${groupId}/image`)
+      const response = await request(app)
+        .post(`/groups/${groupId}/image`)
 
-    //       .field("groupId", body.id)
+        .field("groupId", body.id)
 
-    //       .attach("file", "public/Teruel.jpg")
+        .attach("file", "public/Teruel.jpg")
 
-    //       .set("Authorization", `Bearer ${token}`);
+        .set("Authorization", `Bearer ${token}`);
 
-    //     expect(response.status).toBe(400);
+      expect(response.status).toBe(400);
 
-    //     expect(response.body[0].msg).toBe("Image size exceed 5 MB");
-    //   }, 10000);
+      expect(response.body[0].msg).toBe("Image size exceed 5 MB");
+    }, 10000);
   });
 
   describe("[GET] /groups", () => {

@@ -1,7 +1,5 @@
 const { check } = require("express-validator");
 
-const imageType = "allowed extensions - jpeg, jpg, png, gif";
-
 const imageSizeExceedLimit = "Image size exceed 5 MB";
 
 const cloudinary = require("cloudinary").v2;

@@ -9,43 +9,8 @@ const app = require("../app");
 app.use("/", groupRouter);
 
 describe("testing groups controllers and routes", (done) => {
-  let userOne;
-
-  let userTwo;
-
-  let getToken;
-
   beforeAll(async () => {
     await prisma.$connect();
-
-    userOne = await request(app).post("/users/signup").send({
-      first_name: "user",
-      last_name: "user",
-      username: "user",
-      password: "12345678Bg@",
-      confirm_password: "12345678Bg@",
-      bio: "",
-      profile_picture: "",
-      background_picture: "",
-    });
-
-    userTwo = await request(app).post("/users/signup").send({
-      first_name: "user1",
-      last_name: "user1",
-      username: "user1",
-      password: "12345678Bg@",
-      confirm_password: "12345678Bg@",
-      bio: "",
-      profile_picture: "",
-      background_picture: "",
-    });
-
-    const logInGetToken = await request(app).post("/users/login").send({
-      username: "user",
-      password: "12345678Bg@",
-    });
-
-    getToken = logInGetToken.body.token;
   });
 
   afterAll(async () => {
@@ -62,104 +27,195 @@ describe("testing groups controllers and routes", (done) => {
 
   describe("[POST] /groups", () => {
     it("should respond with 200 when creating new group", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "newuser",
+          last_name: "newuser",
+          username: "newuser",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "newuser1",
+          last_name: "newuser1",
+          username: "newuser1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "newuser",
+        password: "12345678Bg@",
+      });
 
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
+      const { token } = logInRegisteredUser._body;
 
       const { body, status, header } = await request(app)
         .post("/groups")
-        .send({
-          group_name: "group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
 
       expect(status).toBe(200);
 
       expect(header["content-type"]).toMatch(/json/);
 
-      expect(body.createGroup.id).toEqual(body.createGroup.id);
+      expect(body.id).toEqual(body.id);
 
-      expect(body.createGroup.group_name).toEqual("group");
+      expect(body.group_name).toEqual("group");
 
-      expect(body.createGroupChat.id).toEqual(body.createGroupChat.id);
+      expect(body.group_image).toEqual(body.group_image);
 
-      expect(body.createGroupChat.groupId).toBe(null);
+      expect(body.group_creatorId).toEqual(body.group_creatorId);
+
+      body.users.map((user) => {
+        expect(user.id).toBe(user.id);
+
+        expect(user.first_name).toBe(user.first_name);
+
+        expect(user.last_name).toBe(user.last_name);
+
+        expect(user.username).toBe(user.username);
+
+        expect(user.password).toBe(user.password);
+
+        expect(user.confirm_password).toBe(user.confirm_password);
+
+        expect(user.bio).toBe("");
+
+        expect(user.profile_picture).toBe("");
+
+        expect(user.background_picture).toBe("");
+
+        expect(user.online_presence).toBe(user.online_presence);
+
+        expect(user.role).toBe("USER");
+
+        expect(user.groupId).toBe(user.groupId);
+
+        expect(user.globalChatId).toBe(null);
+      });
+
+      expect(body.messagesGGChat).toEqual([]);
     });
 
     it("should respond with 400 when group already exists", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const { body, header, status } = await request(app)
-        .post("/groups")
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
         .send({
-          group_name: "group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+          first_name: "newuser2",
+          last_name: "newuser2",
+          username: "newuser2",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const findGroup = await prisma.group.findUnique({
-        where: {
-          group_name: "group",
-        },
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "newuser3",
+          last_name: "newuser3",
+          username: "newuser3",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "newuser2",
+        password: "12345678Bg@",
       });
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body, status, header } = await request(app)
+        .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
 
       expect(status).toBe(400);
 
       expect(header["content-type"]).toMatch(/json/);
 
-      expect(findGroup).not.toBeNull();
-
       expect(body[0].msg).toEqual("Group name is already taken");
     });
 
     it("should respond with 400 when group name condition is not met", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const { body, header, status } = await request(app)
-        .post("/groups")
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
         .send({
-          group_name: "gr",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+          first_name: "test",
+          last_name: "test",
+          username: "test",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "test1",
+          last_name: "test1",
+          username: "test1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "test",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body, status, header } = await request(app)
+        .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "gr")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
 
       expect(status).toBe(400);
 
@@ -171,35 +227,56 @@ describe("testing groups controllers and routes", (done) => {
     });
 
     it("should respond with 200 when sending a message in group", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "testing",
+          last_name: "testing",
+          username: "testing",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "testing1",
+          last_name: "testing1",
+          username: "testing1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "newuser2",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body, status, header } = await request(app)
+        .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "new group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      // console.log(body);
 
       const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
-        .post("/groups")
-        .send({
-          group_name: "group123",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
-
-      const groupId = createNewGroup.body.createGroup.id;
-
-      const chatGroupId = createNewGroup.body.createGroupChat.id;
-
-      const { body, header, status } = await request(app)
-        .post(`/groups/${groupId}/message/${chatId}`)
+        .post(`/groups/${body.id}/message/`)
         .send({
           message_text: "hello",
           message_imageName: "",
@@ -207,419 +284,659 @@ describe("testing groups controllers and routes", (done) => {
           message_imageType: "",
           message_imageSize: 0,
           createdAt: new Date(),
-          userId: userOneId,
-          chatId: chatGroupId,
-          groupId: groupId,
+          // userId: userOneId,
+          groupId: body.id,
         })
         .set("Authorization", `Bearer ${token}`);
 
-      expect(status).toBe(200);
+      // console.log(response);
 
-      expect(header["content-type"]).toMatch(/json/);
+      const message = response.body.messagesGGChat[0];
 
-      expect(body.sendMessageInGroup.id).toBe(body.sendMessageInGroup.id);
+      expect(response.status).toBe(200);
 
-      expect(body.sendMessageInGroup.message_text).toEqual("hello");
+      expect(response.header["content-type"]).toMatch(/json/);
 
-      expect(body.sendMessageInGroup.message_imageName).toBe("");
+      expect(message.id).toBe(message.id);
 
-      expect(body.sendMessageInGroup.message_imageURL).toBe("");
+      expect(message.message_text).toEqual("hello");
 
-      expect(body.sendMessageInGroup.message_imageType).toBe("");
+      expect(message.message_imageName).toBe("");
 
-      expect(body.sendMessageInGroup.message_imageSize).toBe(0);
+      expect(message.message_imageURL).toBe("");
 
-      expect(body.sendMessageInGroup.createdAt).toBe(
-        body.sendMessageInGroup.createdAt
-      );
+      expect(message.message_imageType).toBe("");
 
-      expect(body.sendMessageInGroup.updatedAt).toBe(
-        body.sendMessageInGroup.updatedAt
-      );
+      expect(message.message_imageSize).toBe(0);
 
-      expect(body.sendMessageInGroup.userId).toBe(
-        body.sendMessageInGroup.userId
-      );
+      expect(message.createdAt).toBe(message.createdAt);
 
-      expect(body.sendMessageInGroup.chatId).toBe(
-        body.sendMessageInGroup.chatId
-      );
+      expect(message.updatedAt).toBe(message.updatedAt);
 
-      expect(body.sendMessageInGroup.groupId).toBe(
-        body.sendMessageInGroup.groupId
-      );
+      expect(message.userId).toBe(message.userId);
+
+      expect(message.groupId).toBe(message.groupId);
     });
 
     it("should respond with 200 when sending an image in group", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
-        .post("/groups")
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
         .send({
-          group_name: "group1234",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+          first_name: "random",
+          last_name: "random",
+          username: "random",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const groupId = createNewGroup.body.createGroup.id;
-
-      const { body, header, status } = await request(app)
-        .post(`/groups/${groupId}/image/${chatId}`)
-
-        .attach("file", "public/Screenshot_2025-01-09_12-31-20.png")
-
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(status).toBe(200);
-
-      expect(header["content-type"]).toMatch(/json/);
-
-      expect(body.sendImageInGroup.id).toEqual(body.sendImageInGroup.id);
-
-      expect(body.sendImageInGroup.message_text).toBe("");
-
-      expect(body.sendImageInGroup.message_imageName).toEqual(
-        "Screenshot_2025-01-09_12-31-20.png"
-      );
-
-      expect(body.sendImageInGroup.message_imageURL).toBe(
-        "https://res.cloudinary.com/dsofl9wku/image/upload/v1736579322/wemessage_images/Screenshot_2025-01-09_12-31-20.png.png"
-      );
-
-      expect(body.sendImageInGroup.message_imageType).toEqual("image/png");
-
-      expect(body.sendImageInGroup.message_imageSize).toBe(116383);
-
-      expect(body.sendImageInGroup.createdAt).toBe(
-        body.sendImageInGroup.createdAt
-      );
-
-      expect(body.sendImageInGroup.updatedAt).toBe(
-        body.sendImageInGroup.updatedAt
-      );
-
-      expect(body.sendImageInGroup.chatId).toBe(body.sendImageInGroup.chatId);
-
-      expect(body.sendImageInGroup.groupId).toBe(body.sendImageInGroup.groupId);
-    });
-
-    it("should respond with 400 if image is too big", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
-        .post("/groups")
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
         .send({
-          group_name: "new group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+          first_name: "random1",
+          last_name: "random1",
+          username: "random1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const groupId = createNewGroup.body.createGroup.id;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "random",
+        password: "12345678Bg@",
+      });
 
-      const { body, header, status } = await request(app)
-        .post(`/groups/${groupId}/image/${chatId}`)
-
-        .attach("file", "public/Teruel.jpg")
-
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(body[0].msg).toBe("Image size exceed 5 MB");
-
-      expect(header["content-type"]).toMatch(/json/);
-
-      expect(status).toBe(400);
-    }, 10000);
-
-    it("should respond with message if you don't upload an image", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
-        .post("/groups")
-        .send({
-          group_name: "new group123",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
-
-      const groupId = createNewGroup.body.createGroup.id;
+      const { token } = logInRegisteredUser._body;
 
       const { body } = await request(app)
-        .post(`/groups/${groupId}/image/${chatId}`)
+        .post("/groups")
 
-        .attach("file", "public/Plain Text.txt")
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "random")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      const groupId = body.id;
+
+      const response = await request(app)
+        .post(`/groups/${groupId}/image`)
+
+        .field("groupId", body.id)
+
+        .attach("file", "public/image.png")
 
         .set("Authorization", `Bearer ${token}`);
 
-      expect(body).toEqual("An unknown file format not allowed");
+      const message = response.body.messagesGGChat[0];
+
+      expect(response.status).toBe(200);
+
+      expect(response.header["content-type"]).toMatch(/json/);
+
+      expect(message.id).toBe(message.id);
+
+      expect(message.message_text).toEqual("");
+
+      expect(message.message_imageName).toBe(message.message_imageName);
+
+      expect(message.message_imageURL).toBe(message.message_imageURL);
+
+      expect(message.message_imageType).toBe(message.message_imageType);
+
+      expect(message.message_imageSize).toBe(message.message_imageSize);
+
+      expect(message.createdAt).toBe(message.createdAt);
+
+      expect(message.updatedAt).toBe(message.updatedAt);
+
+      expect(message.userId).toBe(message.userId);
+
+      expect(message.groupId).toBe(message.groupId);
     });
+
+    it("should respond with message if you don't upload an image", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "useR",
+          last_name: "useR",
+          username: "useR",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "useR1",
+          last_name: "useR1",
+          username: "useR1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "useR",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
+
+      const { body } = await request(app)
+        .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "a group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      const groupId = body.id;
+
+      const response = await request(app)
+        .post(`/groups/${groupId}/image`)
+
+        .field("groupId", body.id)
+
+        .attach("file", "public/document.txt")
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.body).toEqual("An unknown file format not allowed");
+    });
+
+    //   it("should respond with 400 if image is too big", async () => {
+    //     const registeredSenderUser = await request(app)
+    //       .post("/users/signup")
+    //       .send({
+    //         first_name: "useRr",
+    //         last_name: "useRr",
+    //         username: "useRr",
+    //         password: "12345678Bg@",
+    //         confirm_password: "12345678Bg@",
+    //         bio: "",
+    //         profile_picture: "",
+    //         background_picture: "",
+    //       });
+
+    //     const registeredReceiverUser = await request(app)
+    //       .post("/users/signup")
+    //       .send({
+    //         first_name: "useRr1",
+    //         last_name: "useRr1",
+    //         username: "useRr1",
+    //         password: "12345678Bg@",
+    //         confirm_password: "12345678Bg@",
+    //         bio: "",
+    //         profile_picture: "",
+    //         background_picture: "",
+    //       });
+
+    //     const logInRegisteredUser = await request(app).post("/users/login").send({
+    //       username: "useRr",
+    //       password: "12345678Bg@",
+    //     });
+
+    //     const { token } = logInRegisteredUser._body;
+
+    //     const { body } = await request(app)
+    //       .post("/groups")
+
+    //       .set("Authorization", `Bearer ${token}`)
+
+    //       .field("group_name", "le group")
+
+    //       .field("group_creatorId", registeredSenderUser._body.id)
+
+    //       .field("userId", registeredReceiverUser._body.id)
+
+    //       .attach("file", "public/image.png");
+
+    //     const groupId = body.id;
+
+    //     const response = await request(app)
+    //       .post(`/groups/${groupId}/image`)
+
+    //       .field("groupId", body.id)
+
+    //       .attach("file", "public/Teruel.jpg")
+
+    //       .set("Authorization", `Bearer ${token}`);
+
+    //     expect(response.status).toBe(400);
+
+    //     expect(response.body[0].msg).toBe("Image size exceed 5 MB");
+    //   }, 10000);
   });
 
   describe("[GET] /groups", () => {
     it("should respond with 200 and group information", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "truck",
+          last_name: "truck",
+          username: "truck",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "truck1",
+          last_name: "truck1",
+          username: "truck1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "truck",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
 
       const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
         .post("/groups")
-        .send({
-          group_name: "a group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
 
-      const groupId = createNewGroup.body.createGroup.id;
+        .set("Authorization", `Bearer ${token}`)
 
-      const { body } = await request(app)
-        .get(`/groups/${groupId}`)
+        .field("group_name", "le truck")
 
-        .set("Authorization", `Bearer ${token}`);
+        .field("group_creatorId", registeredSenderUser._body.id)
 
-      expect(body.findByGroupId.id).toEqual(body.findByGroupId.id);
+        .field("userId", registeredReceiverUser._body.id)
 
-      expect(body.findByGroupId.group_name).toEqual("a group");
+        .attach("file", "public/image.png");
 
-      expect(body.findByGroupId.chats[0].id).toEqual(
-        body.findByGroupId.chats[0].id
-      );
-
-      expect(body.findByGroupId.chats[0].groupId).toEqual(
-        body.findByGroupId.chats[0].groupId
-      );
-
-      expect(body.findByGroupId.users[0].id).toEqual(
-        body.findByGroupId.users[0].id
-      );
-
-      expect(body.findByGroupId.users[0].first_name).toEqual("user1");
-
-      expect(body.findByGroupId.users[0].last_name).toEqual("user1");
-
-      expect(body.findByGroupId.users[0].username).toEqual("user1");
-
-      expect(body.findByGroupId.users[0].password).toEqual(
-        body.findByGroupId.users[0].password
-      );
-
-      expect(body.findByGroupId.users[0].confirm_password).toEqual(
-        body.findByGroupId.users[0].confirm_password
-      );
-
-      expect(body.findByGroupId.users[0].bio).toEqual("");
-
-      expect(body.findByGroupId.users[0].profile_picture).toEqual("");
-
-      expect(body.findByGroupId.users[0].background_picture).toEqual("");
-
-      expect(body.findByGroupId.users[0].online_presence).toEqual("OFFLINE");
-
-      expect(body.findByGroupId.users[0].role).toEqual("USER");
-
-      expect(body.findByGroupId.users[0].groupId).toEqual(
-        body.findByGroupId.users[0].groupId
-      );
-
-      expect(body.findByGroupId.users[1].id).toEqual(
-        body.findByGroupId.users[1].id
-      );
-
-      expect(body.findByGroupId.users[1].first_name).toEqual("user");
-
-      expect(body.findByGroupId.users[1].last_name).toEqual("user");
-
-      expect(body.findByGroupId.users[1].username).toEqual("user");
-
-      expect(body.findByGroupId.users[1].password).toEqual(
-        body.findByGroupId.users[1].password
-      );
-
-      expect(body.findByGroupId.users[1].confirm_password).toEqual(
-        body.findByGroupId.users[1].confirm_password
-      );
-
-      expect(body.findByGroupId.users[1].bio).toEqual("");
-
-      expect(body.findByGroupId.users[1].profile_picture).toEqual("");
-
-      expect(body.findByGroupId.users[1].background_picture).toEqual("");
-
-      expect(body.findByGroupId.users[1].online_presence).toEqual("ONLINE");
-
-      expect(body.findByGroupId.users[1].role).toEqual("USER");
-
-      expect(body.findByGroupId.users[1].groupId).toEqual(
-        body.findByGroupId.users[1].groupId
-      );
-    });
-
-    it("should respond with 200 and get all groups information", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
-        .post("/groups")
-        .send({
-          group_name: "another group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
-
-      const { body, status } = await request(app)
-        .get("/groups/")
+      const { body, status, headers } = await request(app)
+        .get(`/groups/${response.body.id}`)
 
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(200);
 
-      body.findAllGroups.map((groups) => {
+      expect(headers["content-type"]).toMatch(/json/);
+
+      expect(body.id).toEqual(body.id);
+
+      expect(body.group_name).toEqual(body.group_name);
+
+      expect(body.group_image).toEqual(body.group_image);
+
+      expect(body.group_creatorId).toEqual(body.group_creatorId);
+
+      expect(body.messagesGGChat).toEqual([]);
+
+      body.users.map((user) => {
+        expect(user.id).toBe(user.id);
+
+        expect(user.first_name).toBe(user.first_name);
+
+        expect(user.last_name).toBe(user.last_name);
+
+        expect(user.username).toBe(user.username);
+
+        expect(user.password).toBe(user.password);
+
+        expect(user.confirm_password).toBe(user.confirm_password);
+
+        expect(user.bio).toBe(user.bio);
+
+        expect(user.profile_picture).toBe(user.profile_picture);
+
+        expect(user.background_picture).toBe(user.background_picture);
+
+        expect(user.online_presence).toBe(user.online_presence);
+
+        expect(user.role).toBe(user.role);
+
+        expect(user.groupId).toBe(user.groupId);
+
+        expect(user.globalChatId).toBe(user.globalChatId);
+      });
+    });
+
+    it("should respond with 200 and get all groups information", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "bike",
+          last_name: "bike",
+          username: "bike",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "bike1",
+          last_name: "bike1",
+          username: "bike1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "bike",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
+
+      await request(app)
+        .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "le bike")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      const { body, status, headers } = await request(app)
+        .get("/groups")
+
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(status).toBe(200);
+
+      expect(headers["content-type"]).toMatch(/json/);
+
+      body.map((groups) => {
         expect(groups.id).toEqual(groups.id);
 
-        expect(groups.name).toEqual(groups.name);
+        expect(groups.group_name).toEqual(groups.group_name);
+
+        expect(groups.group_image).toEqual(groups.group_image);
+
+        expect(groups.group_creatorId).toEqual(groups.group_creatorId);
       });
     });
   });
 
   describe("[PUT] /groups", () => {
-    it("should respond with 200 when updating group name", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
-
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
-
-      const token = getToken;
-
-      const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
-        .post("/groups")
+    it("should respond with 200 if the message is updated", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
         .send({
-          group_name: "another group 123",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+          first_name: "someone",
+          last_name: "someone",
+          username: "someone",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const groupId = createNewGroup.body.createGroup.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "else",
+          last_name: "else",
+          username: "else",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "someone",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
 
       const { body, status, header } = await request(app)
-        .put(`/groups/${groupId}`)
+        .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "someone group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      // console.log(body);
+
+      const sendMessage = await request(app)
+        .post(`/groups/${body.id}/message/`)
         .send({
-          group_name: "updated group",
+          message_text: "hello",
+          message_imageName: "",
+          message_imageURL: "",
+          message_imageType: "",
+          message_imageSize: 0,
+          createdAt: new Date(),
+          // userId: userOneId,
+          groupId: body.id,
         })
         .set("Authorization", `Bearer ${token}`);
+
+      const messageId = sendMessage.body.messagesGGChat[0].id;
+
+      // console.log(messageId);
+
+      const editMessage = await request(app)
+        .put(`/groups/${body.id}/message/${messageId}`)
+        .send({
+          message_text: "updated message",
+          updatedAt: new Date(),
+          // userId: userOneId,
+          groupId: body.id,
+        })
+        .set("Authorization", `Bearer ${token}`);
+
+      const message = editMessage._body.messagesGGChat[0];
 
       expect(status).toBe(200);
 
       expect(header["content-type"]).toMatch(/json/);
 
-      expect(body.editGroupName.id).toEqual(body.editGroupName.id);
+      expect(editMessage.status).toBe(200);
 
-      expect(body.editGroupName.group_name).toEqual("updated group");
+      expect(editMessage.header["content-type"]).toMatch(/json/);
+
+      expect(message.id).toBe(message.id);
+
+      expect(message.message_text).toEqual("updated message");
+
+      expect(message.message_imageName).toBe("");
+
+      expect(message.message_imageURL).toBe("");
+
+      expect(message.message_imageType).toBe("");
+
+      expect(message.message_imageSize).toBe(0);
+
+      expect(message.createdAt).toBe(message.createdAt);
+
+      expect(message.updatedAt).toBe(message.updatedAt);
+
+      expect(message.userId).toBe(message.userId);
+
+      expect(message.groupId).toBe(message.groupId);
     });
 
-    it("should respond with 400 when failing to meet group name condition", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+    it("should respond with 200 when updating group name", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "auser",
+          last_name: "auser",
+          username: "auser",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "auser1",
+          last_name: "auser1",
+          username: "auser1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "auser",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
 
       const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
         .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "a someone group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      const groupId = response.body.id;
+
+      const group_creatorId = response.body.group_creatorId;
+
+      const { body, headers, status } = await request(app)
+        .put(`/groups/${groupId}`)
         .send({
-          group_name: "random group123",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
+          group_name: "updated group",
+          group_creatorId: group_creatorId,
         })
         .set("Authorization", `Bearer ${token}`);
 
-      const groupId = createNewGroup.body.createGroup.id;
+      // console.log(body);
 
-      const { body, status, header } = await request(app)
+      expect(status).toBe(200);
+
+      expect(headers["content-type"]).toMatch(/json/);
+
+      expect(body.id).toEqual(body.id);
+
+      expect(body.group_name).toEqual("updated group");
+
+      expect(body.group_image).toEqual(body.group_image);
+
+      expect(body.group_creatorId).toEqual(body.group_creatorId);
+    });
+
+    it("should respond with 400 when failing to meet group name condition", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "bleh",
+          last_name: "bleh",
+          username: "bleh",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "bleh1",
+          last_name: "bleh1",
+          username: "bleh1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "auser",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
+
+      const response = await request(app)
+        .post("/groups")
+
+        .set("Authorization", `Bearer ${token}`)
+
+        .field("group_name", "bleh group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      const groupId = response.body.id;
+
+      const group_creatorId = response.body.group_creatorId;
+
+      const { body, headers, status } = await request(app)
         .put(`/groups/${groupId}`)
         .send({
-          group_name: "g",
+          group_name: "bl",
+          group_creatorId: group_creatorId,
         })
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(400);
 
-      expect(header["content-type"]).toMatch(/json/);
+      expect(headers["content-type"]).toMatch(/json/);
 
       expect(body[0].msg).toEqual(
         "Group name must be between 3 and 30 characters"
@@ -627,170 +944,213 @@ describe("testing groups controllers and routes", (done) => {
     });
 
     it("should respond with 400 if group name already exists", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "what",
+          last_name: "what",
+          username: "what",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "what1",
+          last_name: "what1",
+          username: "what1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "auser",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
 
       const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
         .post("/groups")
-        .send({
-          group_name: "random group12345",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
 
-      const groupId = createNewGroup.body.createGroup.id;
+        .set("Authorization", `Bearer ${token}`)
 
-      const { body, status, header } = await request(app)
+        .field("group_name", "idunno")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      const groupId = response.body.id;
+
+      const group_creatorId = response.body.group_creatorId;
+
+      const { body, headers, status } = await request(app)
         .put(`/groups/${groupId}`)
         .send({
-          group_name: "updated group",
+          group_name: "idunno",
+          group_creatorId: group_creatorId,
         })
         .set("Authorization", `Bearer ${token}`);
 
       expect(status).toBe(400);
 
-      expect(header["content-type"]).toMatch(/json/);
+      expect(headers["content-type"]).toMatch(/json/);
 
       expect(body[0].msg).toEqual("Group name is already taken");
     });
 
-    it("should respond with 200 if the message is updated", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+    it("should create a group and someone should able to join", async () => {
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "gibberish",
+          last_name: "gibberish",
+          username: "gibberish",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "gibberish1",
+          last_name: "gibberish1",
+          username: "gibberish1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const registeredNewUser = await request(app).post("/users/signup").send({
+        first_name: "gibberish2",
+        last_name: "gibberish2",
+        username: "gibberish2",
+        password: "12345678Bg@",
+        confirm_password: "12345678Bg@",
+        bio: "",
+        profile_picture: "",
+        background_picture: "",
+      });
+
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "gibberish",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
 
       const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
         .post("/groups")
-        .send({
-          group_name: "group12345",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
 
-      const groupId = createNewGroup.body.createGroup.id;
+        .set("Authorization", `Bearer ${token}`)
 
-      const chatGroupId = createNewGroup.body.createGroupChat.id;
+        .field("group_name", "idunno group")
 
-      const sendNewMessageInGroup = await request(app)
-        .post(`/groups/${groupId}/message/${chatGroupId}`)
-        .send({
-          message_text: "hello",
-          message_imageName: "",
-          message_imageURL: "",
-          message_imageType: "",
-          message_imageSize: 0,
-          createdAt: new Date(),
-          userId: userOneId,
-          chatId: chatGroupId,
-          groupId: groupId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+        .field("group_creatorId", registeredSenderUser._body.id)
 
-      const messageId = sendNewMessageInGroup.body.sendMessageInGroup.id;
+        .field("userId", registeredReceiverUser._body.id)
 
-      const { body, status, header } = await request(app)
-        .put(`/groups/${groupId}/message/${messageId}`)
-        .send({
-          message_text: "updated message",
-          updatedAt: new Date(),
-          userId: userOneId,
-          chatId: chatGroupId,
-          groupId: groupId,
-        })
-        .set("Authorization", `Bearer ${token}`);
+        .attach("file", "public/image.png");
+
+      // console.log(response);
+
+      const groupId = response.body.id;
+
+      const logInNewUser = await request(app).post("/users/login").send({
+        username: "gibberish2",
+        password: "12345678Bg@",
+      });
+
+      // console.log(logInNewUser);
+
+      const loggedInUserToken = logInNewUser.body.token;
+
+      const { body, headers, status } = await request(app)
+        .put(`/groups/${groupId}/join`)
+        .send({})
+        .set("Authorization", `Bearer ${loggedInUserToken}`);
+
+      // console.log(body);
 
       expect(status).toBe(200);
 
-      expect(header["content-type"]).toMatch(/json/);
+      expect(headers["content-type"]).toMatch(/json/);
 
-      expect(body.editMessageInGroup.id).toEqual(body.editMessageInGroup.id);
+      expect(body.users.length).toBe(3);
 
-      expect(body.editMessageInGroup.message_text).toEqual("updated message");
-
-      expect(body.editMessageInGroup.message_imageName).toBe("");
-
-      expect(body.editMessageInGroup.message_imageURL).toBe("");
-
-      expect(body.editMessageInGroup.message_imageType).toBe("");
-
-      expect(body.editMessageInGroup.message_imageSize).toBe(0);
-
-      expect(body.editMessageInGroup.createdAt).toBe(
-        body.editMessageInGroup.createdAt
-      );
-
-      expect(body.editMessageInGroup.updatedAt).toBe(
-        body.editMessageInGroup.updatedAt
-      );
-
-      expect(body.editMessageInGroup.userId).toEqual(
-        body.editMessageInGroup.userId
-      );
-
-      expect(body.editMessageInGroup.chatId).toEqual(
-        body.editMessageInGroup.chatId
-      );
-
-      expect(body.editMessageInGroup.groupId).toBe(
-        body.editMessageInGroup.groupId
-      );
+      expect(body.users.length).not.toBe(2);
     });
   });
 
   describe("[DELETE] /groups", () => {
     it("should respond with 200 when deleting a message", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "juko",
+          last_name: "juko",
+          username: "juko",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "juko1",
+          last_name: "juko1",
+          username: "juko1",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "juko",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
 
       const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
         .post("/groups")
-        .send({
-          group_name: "deleted group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
 
-      const groupId = createNewGroup.body.createGroup.id;
+        .set("Authorization", `Bearer ${token}`)
 
-      const chatGroupId = createNewGroup.body.createGroupChat.id;
+        .field("group_name", "juko group")
 
-      const sendNewMessageInGroup = await request(app)
-        .post(`/groups/${groupId}/message/${chatGroupId}`)
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      // console.log(response);
+
+      const groupId = response.body.id;
+
+      const sendingMessage = await request(app)
+        .post(`/groups/${groupId}/message/`)
         .send({
           message_text: "hello",
           message_imageName: "",
@@ -798,13 +1158,16 @@ describe("testing groups controllers and routes", (done) => {
           message_imageType: "",
           message_imageSize: 0,
           createdAt: new Date(),
-          userId: userOneId,
-          chatId: chatGroupId,
+          // userId: userOneId,
           groupId: groupId,
         })
         .set("Authorization", `Bearer ${token}`);
 
-      const messageId = sendNewMessageInGroup.body.sendMessageInGroup.id;
+      // console.log(sendingMessage);
+
+      const messageId = sendingMessage.body.messagesGGChat[0].id;
+
+      // console.log(messageId);
 
       const { body, status, header } = await request(app)
         .delete(`/groups/${groupId}/message/${messageId}`)
@@ -815,39 +1178,70 @@ describe("testing groups controllers and routes", (done) => {
 
       expect(header["content-type"]).toMatch(/json/);
 
-      expect(body.message).toEqual("Message has been deleted.");
+      expect(body.id).toEqual(body.id);
+
+      expect(body.group_name).toEqual(body.group_name);
+
+      expect(body.group_image).toEqual(body.group_image);
+
+      expect(body.group_creatorId).toEqual(body.group_creatorId);
+
+      expect(body.messagesGGChat).toEqual([]);
     });
 
     it("should respond with 200 when group is been deleted", async () => {
-      const userOneId = userOne.body.signUpAndCreateUser.id;
+      const registeredSenderUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "pepe",
+          last_name: "pepe",
+          username: "pepe",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const userTwoId = userTwo.body.signUpAndCreateUser.id;
+      const registeredReceiverUser = await request(app)
+        .post("/users/signup")
+        .send({
+          first_name: "pepega",
+          last_name: "pepega",
+          username: "pepega",
+          password: "12345678Bg@",
+          confirm_password: "12345678Bg@",
+          bio: "",
+          profile_picture: "",
+          background_picture: "",
+        });
 
-      const token = getToken;
+      const logInRegisteredUser = await request(app).post("/users/login").send({
+        username: "pepe",
+        password: "12345678Bg@",
+      });
+
+      const { token } = logInRegisteredUser._body;
 
       const response = await request(app)
-        .post("/chats")
-        .send({ id: userOneId, id: userTwoId })
-        .set("Authorization", `Bearer ${token}`);
-
-      const chatId = response.body.createChat.id;
-
-      const createNewGroup = await request(app)
         .post("/groups")
-        .send({
-          group_name: "the last group",
-          id: userOneId,
-          id: userTwoId,
-          chatId: chatId,
-        })
-        .set("Authorization", `Bearer ${token}`);
 
-      const groupId = createNewGroup.body.createGroup.id;
+        .set("Authorization", `Bearer ${token}`)
 
-      const chatGroupId = createNewGroup.body.createGroupChat.id;
+        .field("group_name", "deleted group")
+
+        .field("group_creatorId", registeredSenderUser._body.id)
+
+        .field("userId", registeredReceiverUser._body.id)
+
+        .attach("file", "public/image.png");
+
+      const groupId = response.body.id;
 
       const { body, status, header } = await request(app)
         .delete(`/groups/${groupId}`)
+
+        .send({ group_creatorId: response.body.group_creatorId })
 
         .set("Authorization", `Bearer ${token}`);
 
@@ -855,7 +1249,7 @@ describe("testing groups controllers and routes", (done) => {
 
       expect(header["content-type"]).toMatch(/json/);
 
-      expect(body.message).toEqual("Group has been deleted.");
+      expect(body).toEqual(null);
     });
   });
 });

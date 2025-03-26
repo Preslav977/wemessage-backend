@@ -327,17 +327,14 @@ exports.group_update = [
             { users: { some: { role: "ADMIN" } } },
           ],
         },
-
         data: {
           group_name: group_name,
         },
       });
 
-      console.log(editGroupName);
-
       const getUpdatedGroup = await prisma.group.findFirst({
         where: {
-          id: editGroupName.id,
+          id: id,
         },
         include: {
           users: true,
@@ -366,9 +363,11 @@ exports.group_join_users = [
       },
     });
 
+    // console.log(joinGroup);
+
     const getUpdatedGroupWithNewUsers = await prisma.group.findFirst({
       where: {
-        id: joinGroup.id,
+        id: id,
       },
       include: {
         users: true,

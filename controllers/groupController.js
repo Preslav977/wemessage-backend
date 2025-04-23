@@ -90,8 +90,12 @@ exports.group_details = [
         id: id,
       },
       include: {
+        messagesGGChat: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         users: true,
-        messagesGGChat: true,
       },
     });
 
@@ -110,18 +114,6 @@ exports.groups_get = [
     });
 
     res.json(findAllGroups);
-  }),
-];
-
-exports.groups_friends_get = [
-  verifyToken,
-  asyncHandler(async (req, res, next) => {
-    const { query } = req.query;
-
-    const searchForGroupFriend =
-      await prisma.$queryRaw`SELECT * FROM "user" WHERE first_name ILIKE CONCAT('%', ${query}, '%') OR last_name ILIKE CONCAT('%', ${query}, '%') OR username ILIKE CONCAT('%', ${query}, '%')`;
-
-    res.json(searchForGroupFriend);
   }),
 ];
 
@@ -156,8 +148,12 @@ exports.group_send_message = [
           id: id,
         },
         include: {
+          messagesGGChat: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           users: true,
-          messagesGGChat: true,
         },
       });
 
@@ -217,8 +213,12 @@ exports.group_send_image = [
           id: id,
         },
         include: {
+          messagesGGChat: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           users: true,
-          messagesGGChat: true,
         },
       });
 
@@ -256,8 +256,12 @@ exports.group_edit_message = [
           id: id,
         },
         include: {
+          messagesGGChat: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           users: true,
-          messagesGGChat: true,
         },
       });
 
@@ -292,8 +296,12 @@ exports.group_delete_message = [
         id: id,
       },
       include: {
+        messagesGGChat: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         users: true,
-        messagesGGChat: true,
       },
     });
 
@@ -314,9 +322,12 @@ exports.group_update = [
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
-      const editGroupName = await prisma.group.update({
+      await prisma.group.update({
         select: {
           users: {
+            include: true,
+          },
+          messagesGGChat: {
             include: true,
           },
         },
@@ -331,6 +342,8 @@ exports.group_update = [
           group_name: group_name,
         },
       });
+
+      // console.log(editGroupName);
 
       const getUpdatedGroup = await prisma.group.findFirst({
         where: {
@@ -352,7 +365,7 @@ exports.group_join_users = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const joinGroup = await prisma.group.update({
+    await prisma.group.update({
       where: {
         id: id,
       },
@@ -370,7 +383,11 @@ exports.group_join_users = [
         id: id,
       },
       include: {
-        users: true,
+        users: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         messagesGGChat: true,
       },
     });
@@ -429,8 +446,12 @@ exports.group_delete = [
         group_creatorId: Number(group_creatorId),
       },
       include: {
+        messagesGGChat: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         users: true,
-        messagesGGChat: true,
       },
     });
 

@@ -57,8 +57,12 @@ exports.get_globalChat_by_id = [
         id: id,
       },
       include: {
+        messagesGGChat: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         users: true,
-        messagesGGChat: true,
       },
     });
 
@@ -97,8 +101,12 @@ exports.send_message_globalChat = [
           id: id,
         },
         include: {
+          messagesGGChat: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           users: true,
-          messagesGGChat: true,
         },
       });
 
@@ -156,8 +164,12 @@ exports.send_image_globalChat = [
           id: id,
         },
         include: {
+          messagesGGChat: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           users: true,
-          messagesGGChat: true,
         },
       });
 
@@ -196,8 +208,12 @@ exports.edit_message_globalChat = [
             id: id,
           },
           include: {
+            messagesGGChat: {
+              orderBy: {
+                id: "asc",
+              },
+            },
             users: true,
-            messagesGGChat: true,
           },
         });
 
@@ -226,8 +242,13 @@ exports.join_globalChat = [
       where: {
         id: joinGlobalChat.id,
       },
+
       include: {
-        users: true,
+        users: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         messagesGGChat: true,
       },
     });
@@ -263,8 +284,12 @@ exports.delete_message_globalChat = [
         id: id,
       },
       include: {
+        messagesGGChat: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         users: true,
-        messagesGGChat: true,
       },
     });
 

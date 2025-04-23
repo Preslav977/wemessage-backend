@@ -86,28 +86,9 @@ exports.user_log_in = [
   }),
 ];
 
-exports.user_log_in_admin = [
-  passport.authenticate("local", { session: false }),
-  (req, res) => {
-    const { id, role } = req.user;
-
-    jwt.sign(
-      { id, role },
-      process.env.SECRET,
-      { expiresIn: "25m" },
-      (err, token) => {
-        if (role !== "ADMIN") {
-          res.json({ message: "Unauthorized" });
-        }
-        res.json({ token });
-      }
-    );
-  },
-];
-
 exports.user_log_in_guest = [
   passport.authenticate("local", { session: false }),
-  (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.user;
 
     // console.log(id);
@@ -115,7 +96,16 @@ exports.user_log_in_guest = [
     jwt.sign({ id }, process.env.SECRET, { expiresIn: "25m" }, (err, token) => {
       res.json({ token });
     });
-  },
+
+    await prisma.user.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        online_presence: "ONLINE",
+      },
+    });
+  }),
 ];
 
 exports.user_get_details = [
@@ -124,9 +114,6 @@ exports.user_get_details = [
     const getUserById = await prisma.user.findFirst({
       where: {
         id: req.authData.id,
-      },
-      orderBy: {
-        id: "asc",
       },
     });
 
@@ -350,7 +337,7 @@ exports.user_search = [
   asyncHandler(async (req, res, next) => {
     const { query } = req.query;
 
-    console.log(query);
+    // console.log(query);
 
     const searchForUser =
       await prisma.$queryRaw`SELECT * FROM "user" WHERE first_name ILIKE CONCAT('%', ${query}, '%') OR last_name ILIKE CONCAT('%', ${query}, '%') OR username ILIKE CONCAT('%', ${query}, '%')`;

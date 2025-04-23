@@ -10,6 +10,8 @@ const prisma = require("../db/client");
 
 const upload = require("../middleware/multer");
 
+const cloudinary = require("cloudinary").v2;
+
 const handleFileUpload = require("../middleware/handleFileUpload");
 
 const runMiddleware = require("../middleware/runMiddleware");
@@ -81,10 +83,15 @@ exports.chat_details = [
       where: {
         id: id,
       },
+
       include: {
-        senderChat: true,
+        messages: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         receiverChat: true,
-        messages: true,
+        senderChat: true,
       },
     });
 
@@ -98,10 +105,12 @@ exports.chats_get = [
     const getChats = await prisma.chat.findMany({
       where: {
         OR: [
+          {
+            receiverChatId: req.authData.id,
+          },
           { senderChatId: req.authData.id },
-          { receiverChatId: req.authData.id },
-          { senderChat: { role: "ADMIN" } },
           { receiverChat: { role: "ADMIN" } },
+          { senderChat: { role: "ADMIN" } },
         ],
       },
 
@@ -148,9 +157,13 @@ exports.chat_send_message = [
           id: id,
         },
         include: {
-          senderChat: true,
+          messages: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           receiverChat: true,
-          messages: true,
+          senderChat: true,
         },
       });
 
@@ -213,9 +226,13 @@ exports.chat_send_image = [
           id: id,
         },
         include: {
-          senderChat: true,
+          messages: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           receiverChat: true,
-          messages: true,
+          senderChat: true,
         },
       });
 
@@ -234,6 +251,8 @@ exports.chat_edit_message = [
 
     const { message_text } = req.body;
 
+    console.log(id, messageId);
+
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
     } else {
@@ -242,6 +261,7 @@ exports.chat_edit_message = [
           id: Number(messageId),
           chatId: id,
         },
+
         data: {
           message_text: message_text,
           updatedAt: new Date(),
@@ -252,13 +272,15 @@ exports.chat_edit_message = [
         where: {
           id: id,
         },
+
         include: {
-          senderChat: true,
+          messages: {
+            orderBy: {
+              id: "asc",
+            },
+          },
           receiverChat: true,
-          messages: true,
-        },
-        orderBy: {
-          id: "asc",
+          senderChat: true,
         },
       });
 
@@ -293,9 +315,13 @@ exports.chat_delete_message = [
         id: id,
       },
       include: {
-        senderChat: true,
+        messages: {
+          orderBy: {
+            id: "asc",
+          },
+        },
         receiverChat: true,
-        messages: true,
+        senderChat: true,
       },
     });
 

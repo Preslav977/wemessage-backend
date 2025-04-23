@@ -8,8 +8,6 @@ userRouter.post("/signup", userController.user_sign_up);
 
 userRouter.post("/login", userController.user_log_in);
 
-userRouter.post("/login_admin", userController.user_log_in_admin);
-
 userRouter.post("/login_guest", userController.user_log_in_guest);
 
 userRouter.get("/search", userController.user_search);

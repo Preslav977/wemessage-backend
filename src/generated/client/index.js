@@ -235,7 +235,7 @@ const config = {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://preslaw:22121955Bg971KEKWBGGG666@localhost:5432/wemessage?schema=public"
+        "value": "postgresql://wemessage-backend_owner:14VKafNilxQW@ep-red-brook-a2e0kmra-pooler.eu-central-1.aws.neon.tech/wemessage-backend?sslmode=require"
       }
     }
   },

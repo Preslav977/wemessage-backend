@@ -32,9 +32,20 @@ const asyncHandler = require("express-async-handler");
 
 const verifyToken = require("./middleware/verifyToken");
 
+const compression = require("compression");
+
+const helmet = require("helmet");
+
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://wemessage-backend.onrender.com/",
+      "https://wemessage-frontend.vercel.app",
+    ],
+  })
+);
 
 cloudinary.config({
   cloud_name: process.env.cloud_name,
@@ -149,6 +160,25 @@ app.get(
 );
 
 // app.use("/", indexRouter);
+
+app.use(compression());
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net"],
+    },
+  })
+);
+
+const RateLimit = require("express-rate-limit");
+
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 20,
+});
+
+app.use(limiter);
 
 app.use("/users", userRouter);
 

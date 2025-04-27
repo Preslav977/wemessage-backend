@@ -90,8 +90,8 @@ exports.chat_details = [
             id: "asc",
           },
         },
-        receiverChat: true,
         senderChat: true,
+        receiverChat: true,
       },
     });
 
@@ -105,12 +105,8 @@ exports.chats_get = [
     const getChats = await prisma.chat.findMany({
       where: {
         OR: [
-          {
-            receiverChatId: req.authData.id,
-          },
           { senderChatId: req.authData.id },
-          { receiverChat: { role: "ADMIN" } },
-          { senderChat: { role: "ADMIN" } },
+          { receiverChatId: req.authData.id },
         ],
       },
 
@@ -251,7 +247,7 @@ exports.chat_edit_message = [
 
     const { message_text } = req.body;
 
-    console.log(id, messageId);
+    // console.log(id, messageId);
 
     if (!errors.isEmpty()) {
       res.status(400).send(errors.array());
@@ -294,6 +290,8 @@ exports.chat_delete_message = [
   asyncHandler(async (req, res, next) => {
     const { id, messageId } = req.params;
 
+    console.log(id);
+
     const deleteMessageInChat = await prisma.message.delete({
       where: {
         id: Number(messageId),
@@ -324,6 +322,8 @@ exports.chat_delete_message = [
         senderChat: true,
       },
     });
+
+    // console.log(getChatWithDeletedMessages.id);
 
     res.json(getChatWithDeletedMessages);
   }),

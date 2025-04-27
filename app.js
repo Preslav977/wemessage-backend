@@ -34,7 +34,16 @@ const verifyToken = require("./middleware/verifyToken");
 
 const app = express();
 
+app.use(cors());
+
+cloudinary.config({
+  cloud_name: process.env.cloud_name,
+  api_key: process.env.api_key,
+  api_secret: process.env.api_secret,
+});
+
 app.set("views", path.join(__dirname, "views"));
+
 app.set("view engine", "ejs");
 
 const assetsPath = path.join(__dirname + "/public");
@@ -44,14 +53,6 @@ app.use(express.static(assetsPath));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
-
-app.use(cors());
-
-cloudinary.config({
-  cloud_name: process.env.cloud_name,
-  api_key: process.env.api_key,
-  api_secret: process.env.api_secret,
-});
 
 app.use(
   session({

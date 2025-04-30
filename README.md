@@ -10,11 +10,12 @@ WeMessage is a messaging application that allows users to update their informati
 
 # Live Preview
 
--
+- [View the live site here](https://wemessage-frontend-git-main-preslav977s-projects.vercel.app/login)
+- [View the front-end API repository here](https://github.com/Preslav977/wemessage-frontend)
 
 # Features
 
-- Live validation 
+- Live validation
 - The user can update their background image
 - The user can update their profile image
 - The user can update their information
@@ -42,6 +43,7 @@ WeMessage is a messaging application that allows users to update their informati
 - Cloudinary: uploading the images to the cloud and deleting them
 
 # Lessons Learned
+
 - Enum: how to use them for allowing the user to have multiple roles and online presence
 - Prisma ORM: a user that can have two relationships for the chats, one for sending and one for the receiver, which solved the problem with 1:1 conversation between each user
 - Learned that it is better sometimes to create, update, or delete in the backend and fetch the result by ID instead of doing that in the frontend.
@@ -54,9 +56,10 @@ WeMessage is a messaging application that allows users to update their informati
 - Also learned that you can update the user's online presence on login or logout
 - Learned also that you can select users by role using some in a query
 - Cloudinary: learned how to delete an image from the cloud by using uploader destroy
-- Supertest: learned how to use the beforeAll hook to connect to the database and then use afterAll to delete everything and disconnect before running each test 
+- Supertest: learned how to use the beforeAll hook to connect to the database and then use afterAll to delete everything and disconnect before running each test
 
 # Future Improvements
+
 - Would remove creating each user, chat, or group from each test and maybe create it in another file to reduce the load for each test
 - Would change the way of validating for uploading an image before it is actually uploaded
 - Would implement the socket.io library

@@ -223,9 +223,10 @@ exports.edit_message_globalChat = [
 ];
 
 exports.join_globalChat = [
-  verifyToken,
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+
+    const { userId } = req.body;
 
     const joinGlobalChat = await prisma.globalChat.update({
       where: {
@@ -233,7 +234,7 @@ exports.join_globalChat = [
       },
       data: {
         users: {
-          connect: [{ id: req.authData.id }],
+          connect: [{ id: userId }],
         },
       },
     });
@@ -242,7 +243,6 @@ exports.join_globalChat = [
       where: {
         id: joinGlobalChat.id,
       },
-
       include: {
         users: {
           orderBy: {
